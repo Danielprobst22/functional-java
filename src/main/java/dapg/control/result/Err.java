@@ -1,6 +1,6 @@
 package dapg.control.result;
 
-import dapg.control.result.boundary.Boundary;
+import dapg.control.result.boundary.AbstractBoundary;
 import lombok.NonNull;
 
 import java.util.function.Function;
@@ -23,17 +23,12 @@ public record Err<T, E>(@NonNull E err) implements Result<T, E> {
     }
 
     @Override
-    public T orBreak(@NonNull Boundary<?, ? super E, ?> boundary) {
+    public T orBreak(@NonNull AbstractBoundary<?, ? super E> boundary) {
         return boundary.breakErr(err); // throws ErrEarlyReturnException
     }
 
     @Override
-    public T orBreakMappable(@NonNull Boundary<?, ?, ? super E> boundary) {
-        return boundary.breakMappable(err); // throws MappableErrEarlyReturnException
-    }
-
-    @Override
-    public T orBreakThrowable(@NonNull Boundary<?, ?, ?> boundary, @NonNull Function<E, Throwable> mapErr) {
-        return boundary.breakThrowable(mapErr.apply(err));
+    public T orBreakThrowable(@NonNull AbstractBoundary<?, ?> boundary, @NonNull Function<E, Throwable> mapErr) {
+        return boundary.breakThrowable(mapErr.apply(err)); // throws ThrowableEarlyReturnException
     }
 }

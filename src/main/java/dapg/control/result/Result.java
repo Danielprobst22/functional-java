@@ -1,13 +1,17 @@
 package dapg.control.result;
 
+import dapg.control.result.boundary.AbstractBoundary;
 import dapg.control.result.boundary.Boundary;
-import dapg.control.result.boundary.ErrorHandler;
+import dapg.control.result.boundary.BoundaryWithContext;
+import dapg.control.result.boundary.context.ContextfulError;
 import io.vavr.CheckedFunction0;
 import lombok.NonNull;
 
+import java.io.Serializable;
+import java.util.Map;
 import java.util.function.Function;
 
-public sealed interface Result<T, E> permits Ok, Err {
+public sealed interface Result<T, E> extends Serializable permits Ok, Err {
 
     static <T, E> Result<T, E> ok(@NonNull T value) {
         return new Ok<>(value);
@@ -40,8 +44,16 @@ public sealed interface Result<T, E> permits Ok, Err {
         }
     }
 
-    static <T, E, MappableE> Boundary<T, E, MappableE> boundary(@NonNull ErrorHandler<E, MappableE> errorHandler) {
-        return new Boundary<>(errorHandler);
+    static <T, E> Boundary<T, E> boundary(@NonNull Function<Throwable, E> mapThrowable) {
+        return new Boundary<>(mapThrowable);
+    }
+
+    @SafeVarargs
+    static <T, E extends ContextfulError> BoundaryWithContext<T, E> boundaryWithContext(
+            @NonNull Function<Throwable, E> mapThrowable,
+            @NonNull Map.Entry<String, ? extends Serializable>... contextEntries
+    ) {
+        return new BoundaryWithContext<>(mapThrowable, contextEntries);
     }
 
     boolean isOk();
@@ -50,9 +62,18 @@ public sealed interface Result<T, E> permits Ok, Err {
 
     <EE> Result<T, EE> mapErr(@NonNull Function<E, EE> mapErr);
 
-    T orBreak(@NonNull Boundary<?, ? super E, ?> boundary);
+    T orBreak(@NonNull AbstractBoundary<?, ? super E> boundary);
 
-    T orBreakMappable(@NonNull Boundary<?, ?, ? super E> boundary);
-
-    T orBreakThrowable(@NonNull Boundary<?, ?, ?> boundary, @NonNull Function<E, Throwable> mapErr);
+    /**
+     * todo write proper doc
+     * In this scenario, dummyContextEntry will be ignored: <br>
+     * dummyResult.orBreakThrowable(boundary.addContext(dummyContextEntry), err -> err) <br>
+     * However, orBreakThrowable() is a function that might be nice to have in certain circumstances but is not expected to be used too extensively,
+     * so further complicating the design of BoundaryWithContext to handle this edge case does not seem worth the trade-off <br>
+     *
+     * @param boundary
+     * @param mapErr
+     * @return
+     */
+    T orBreakThrowable(@NonNull AbstractBoundary<?, ?> boundary, @NonNull Function<E, Throwable> mapErr);
 }

@@ -1,16 +1,23 @@
 package dapg.control.result.boundary;
 
+import dapg.control.result.Err;
+import dapg.control.result.Ok;
 import dapg.control.result.Result;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import one.util.streamex.StreamEx;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@Slf4j
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BoundaryTest {
     private static final List<String> VALUES = List.of("3", "7", "12", "37", "42");
     private static final List<String> VALUES_WITH_INVALID_ELEMENT = List.of("3", "7", "12", "INVALID", "37", "42");
@@ -21,31 +28,41 @@ class BoundaryTest {
         assertThrows(NullPointerException.class, () -> new Boundary<>(null));
     }
 
-    // todo split into individual tests with appropriate assertions
+    // todo create proper tests with assertions
+
     @Test
-    void test() {
-        System.out.println(parseOrBreak(VALUES));
-        System.out.println(parseOrBreak(VALUES_WITH_INVALID_ELEMENT));
+    @Order(1)
+    void testParseOrBreak() {
+        print(parseOrBreak(VALUES));
+        print(parseOrBreak(VALUES_WITH_INVALID_ELEMENT));
+    }
 
-        System.out.println();
+    @Test
+    @Order(2)
+    void testParseOrBreakThrowable() {
+        print(parseOrBreakThrowable(VALUES));
+        print(parseOrBreakThrowable(VALUES_WITH_INVALID_ELEMENT));
+    }
 
-        System.out.println(parseOrBreakMappable(VALUES));
-        System.out.println(parseOrBreakMappable(VALUES_WITH_INVALID_ELEMENT));
+    @Test
+    @Order(3)
+    void testParseOrMapAndBreak() {
+        print(parseOrMapAndBreak(VALUES));
+        print(parseOrMapAndBreak(VALUES_WITH_INVALID_ELEMENT));
+    }
 
-        System.out.println();
-
-        System.out.println(parseOrBreakThrowable(VALUES));
-        System.out.println(parseOrBreakThrowable(VALUES_WITH_INVALID_ELEMENT));
-
-        System.out.println();
-
-        System.out.println(parseOrMapAndBreak(VALUES));
-        System.out.println(parseOrMapAndBreak(VALUES_WITH_INVALID_ELEMENT));
+    private void print(Result<List<Integer>, Exception> result) {
+        switch (result) {
+            case Ok(List<Integer> values) -> System.out.println("Ok: " + values);
+            case Err(Exception err) -> log.error("Ooops ¯\\_(°ペ)_/¯", err);
+        }
     }
 
     //region parseOrBreak
     private Result<List<Integer>, Exception> parseOrBreak(List<String> values) {
-        return Result.<List<Integer>, Exception, DummyError>boundary(new DummyErrorHandler()).run(boundary -> StreamEx
+        return Result.<List<Integer>, Exception>boundary(
+                throwable -> new IllegalArgumentException("Cannot parse values", throwable)
+        ).attempt(boundary -> StreamEx
                 .of(values)
                 .map(value -> parseWithException(value).orBreak(boundary))
                 .toList()
@@ -57,26 +74,11 @@ class BoundaryTest {
     }
     //endregion
 
-    //region parseOrBreakMappable
-    private Result<List<Integer>, Exception> parseOrBreakMappable(List<String> values) {
-        return Result.<List<Integer>, Exception, DummyError>boundary(new DummyErrorHandler()).run(boundary -> StreamEx
-                .of(values)
-                .map(value -> parseWithDummyError(value).orBreakMappable(boundary))
-                .toList()
-        );
-    }
-
-    private Result<Integer, DummyError.ChildError> parseWithDummyError(String value) {
-        return Result.attempt(
-                err -> new DummyError.ChildError(err.toString()),
-                () -> Integer.parseInt(value)
-        );
-    }
-    //endregion
-
     //region parseOrBreakThrowable
     private Result<List<Integer>, Exception> parseOrBreakThrowable(List<String> values) {
-        return Result.<List<Integer>, Exception, DummyError>boundary(new DummyErrorHandler()).run(boundary -> StreamEx
+        return Result.<List<Integer>, Exception>boundary(
+                throwable -> new IllegalArgumentException("Cannot parse values", throwable)
+        ).attempt(boundary -> StreamEx
                 .of(values)
                 .map(value -> parseWithThrowable(value).orBreakThrowable(boundary, err -> err))
                 .toList()
@@ -90,7 +92,9 @@ class BoundaryTest {
 
     //region parseOrMapAndBreak
     private Result<List<Integer>, Exception> parseOrMapAndBreak(List<String> values) {
-        return Result.<List<Integer>, Exception, DummyError>boundary(new DummyErrorHandler()).run(boundary -> StreamEx
+        return Result.<List<Integer>, Exception>boundary(
+                throwable -> new IllegalArgumentException("Cannot parse values", throwable)
+        ).attempt(boundary -> StreamEx
                 .of(values)
                 .map(value -> parseWithString(value)
                         .mapErr(err -> new IllegalArgumentException("Values contain element that cannot be parsed - %s".formatted(err)))
@@ -105,19 +109,7 @@ class BoundaryTest {
     }
     //endregion
 
-    //region DummyError & Handler
-    private static class DummyErrorHandler implements ErrorHandler<Exception, DummyError> {
-        @Override
-        public Exception mapErr(@NonNull BoundaryTest.DummyError dummyError) {
-            return new IllegalArgumentException("Values contain element that cannot be parsed - %s".formatted(dummyError.toString()));
-        }
-
-        @Override
-        public Exception mapThrowable(@NonNull Throwable throwable) {
-            return new IllegalArgumentException("Values contain element that cannot be parsed", throwable);
-        }
-    }
-
+    //region DummyError
     sealed interface DummyError {
         @Getter
         @RequiredArgsConstructor

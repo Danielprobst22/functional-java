@@ -70,7 +70,7 @@ public class ErrorContext implements Serializable {
         if (firstOccurrence != secondOccurrence) {
             log.warn("ErrorContext: Duplicate entry with different values - key='{}', overriding value='{}' with value='{}'", key, firstOccurrence, secondOccurrence);
         } else {
-            log.debug("ErrorContext: Duplicate entry with same value - key='{}', value='{}'", key, firstOccurrence);
+            log.trace("ErrorContext: Duplicate entry with same value - key='{}', value='{}'", key, firstOccurrence);
         }
     }
     //endregion

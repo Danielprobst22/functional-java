@@ -1,22 +1,28 @@
 package dapg.examples;
 
+import dapg.control.option.None;
 import dapg.control.option.Option;
+import dapg.control.option.Some;
 import dapg.control.result.Result;
+import dapg.recursion.TailRecursion;
+import one.util.streamex.StreamEx;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.math.BigInteger;
+import java.util.Iterator;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SumTreeTest {
 
     @Nested
     class MonomorphicTree {
-        private static final SumTreeNode EMPTY_TREE = SumTreeNode.leaf(42);
+        private static final SumTreeNode EMPTY_TREE = SumTreeNode.leaf(BigInteger.valueOf(42));
         /*
               26
              /  \
@@ -25,15 +31,15 @@ class SumTreeTest {
          4    6    3
          */
         private static final SumTreeNode VALID_TREE_1 = SumTreeNode.full(
-                26,
+                BigInteger.valueOf(26),
                 SumTreeNode.full(
-                        10,
-                        SumTreeNode.leaf(4),
-                        SumTreeNode.leaf(6)
+                        BigInteger.valueOf(10),
+                        SumTreeNode.leaf(BigInteger.valueOf(4)),
+                        SumTreeNode.leaf(BigInteger.valueOf(6))
                 ),
                 SumTreeNode.rightFull(
-                        3,
-                        SumTreeNode.leaf(3)
+                        BigInteger.valueOf(3),
+                        SumTreeNode.leaf(BigInteger.valueOf(3))
                 )
         );
         /*
@@ -44,15 +50,15 @@ class SumTreeTest {
          4    6  3
          */
         private static final SumTreeNode VALID_TREE_2 = SumTreeNode.full(
-                26,
+                BigInteger.valueOf(26),
                 SumTreeNode.full(
-                        10,
-                        SumTreeNode.leaf(4),
-                        SumTreeNode.leaf(6)
+                        BigInteger.valueOf(10),
+                        SumTreeNode.leaf(BigInteger.valueOf(4)),
+                        SumTreeNode.leaf(BigInteger.valueOf(6))
                 ),
                 SumTreeNode.leftFull(
-                        3,
-                        SumTreeNode.leaf(3)
+                        BigInteger.valueOf(3),
+                        SumTreeNode.leaf(BigInteger.valueOf(3))
                 )
         );
         /*
@@ -63,15 +69,15 @@ class SumTreeTest {
              3  4    6
          */
         private static final SumTreeNode VALID_TREE_3 = SumTreeNode.full(
-                26,
+                BigInteger.valueOf(26),
                 SumTreeNode.rightFull(
-                        3,
-                        SumTreeNode.leaf(3)
+                        BigInteger.valueOf(3),
+                        SumTreeNode.leaf(BigInteger.valueOf(3))
                 ),
                 SumTreeNode.full(
-                        10,
-                        SumTreeNode.leaf(4),
-                        SumTreeNode.leaf(6)
+                        BigInteger.valueOf(10),
+                        SumTreeNode.leaf(BigInteger.valueOf(4)),
+                        SumTreeNode.leaf(BigInteger.valueOf(6))
                 )
         );
         /*
@@ -82,15 +88,15 @@ class SumTreeTest {
           3     4    6
          */
         private static final SumTreeNode VALID_TREE_4 = SumTreeNode.full(
-                26,
+                BigInteger.valueOf(26),
                 SumTreeNode.leftFull(
-                        3,
-                        SumTreeNode.leaf(3)
+                        BigInteger.valueOf(3),
+                        SumTreeNode.leaf(BigInteger.valueOf(3))
                 ),
                 SumTreeNode.full(
-                        10,
-                        SumTreeNode.leaf(4),
-                        SumTreeNode.leaf(6)
+                        BigInteger.valueOf(10),
+                        SumTreeNode.leaf(BigInteger.valueOf(4)),
+                        SumTreeNode.leaf(BigInteger.valueOf(6))
                 )
         );
         /*
@@ -101,15 +107,15 @@ class SumTreeTest {
          4    6    3
          */
         private static final SumTreeNode TREE_WITH_INVALID_LEFT_CHILD = SumTreeNode.full(
-                26,
+                BigInteger.valueOf(26),
                 SumTreeNode.full(
-                        11,
-                        SumTreeNode.leaf(4),
-                        SumTreeNode.leaf(6)
+                        BigInteger.valueOf(11),
+                        SumTreeNode.leaf(BigInteger.valueOf(4)),
+                        SumTreeNode.leaf(BigInteger.valueOf(6))
                 ),
                 SumTreeNode.rightFull(
-                        3,
-                        SumTreeNode.leaf(3)
+                        BigInteger.valueOf(3),
+                        SumTreeNode.leaf(BigInteger.valueOf(3))
                 )
         );
         /*
@@ -120,15 +126,15 @@ class SumTreeTest {
          4    6    3
          */
         private static final SumTreeNode TREE_WITH_INVALID_RIGHT_CHILD = SumTreeNode.full(
-                26,
+                BigInteger.valueOf(26),
                 SumTreeNode.full(
-                        10,
-                        SumTreeNode.leaf(4),
-                        SumTreeNode.leaf(6)
+                        BigInteger.valueOf(10),
+                        SumTreeNode.leaf(BigInteger.valueOf(4)),
+                        SumTreeNode.leaf(BigInteger.valueOf(6))
                 ),
                 SumTreeNode.rightFull(
-                        4,
-                        SumTreeNode.leaf(3)
+                        BigInteger.valueOf(4),
+                        SumTreeNode.leaf(BigInteger.valueOf(3))
                 )
         );
         /*
@@ -139,106 +145,341 @@ class SumTreeTest {
          4    6    3
          */
         private static final SumTreeNode TREE_WITH_INVALID_ROOT = SumTreeNode.full(
-                27,
+                BigInteger.valueOf(27),
                 SumTreeNode.full(
-                        10,
-                        SumTreeNode.leaf(4),
-                        SumTreeNode.leaf(6)
+                        BigInteger.valueOf(10),
+                        SumTreeNode.leaf(BigInteger.valueOf(4)),
+                        SumTreeNode.leaf(BigInteger.valueOf(6))
                 ),
                 SumTreeNode.rightFull(
-                        3,
-                        SumTreeNode.leaf(3)
+                        BigInteger.valueOf(3),
+                        SumTreeNode.leaf(BigInteger.valueOf(3))
                 )
         );
+        private static final SumTreeNode UNBALANCED_TREE_WITH_DEPTH_TEN_THOUSAND = makeUnbalancedSumTree(10_000);
 
         @Test
-        void shouldReturnTrue_whenEvaluatingEmptyTree() {
-            System.out.println(calculateSumRecursively(EMPTY_TREE)); // todo just for illustration
-            assertTrue(isValidSumTree(EMPTY_TREE));
-        }
-
-        @ParameterizedTest
-        @MethodSource("validTrees")
-        void shouldReturnTrue_whenEvaluatingValidTree(SumTreeNode validTree) {
-            System.out.println(calculateSumRecursively(validTree)); // todo just for illustration
-            assertTrue(isValidSumTree(validTree));
-        }
-
-        static Stream<SumTreeNode> validTrees() {
-            return Stream.of(VALID_TREE_1, VALID_TREE_2, VALID_TREE_3, VALID_TREE_4);
+        void shouldThrowStackOverflowError_whenEvaluatingUnbalancedTreeWithDepthTenThousandRecursively() {
+            assertThrows(StackOverflowError.class, () -> RecursiveEvaluation.isValidSumTree(UNBALANCED_TREE_WITH_DEPTH_TEN_THOUSAND));
         }
 
         @Test
-        void shouldReturnFalse_whenEvaluatingTreeWithInvalidLeftChild() {
-            System.out.println(calculateSumRecursively(TREE_WITH_INVALID_LEFT_CHILD)); // todo just for illustration
-            assertFalse(isValidSumTree(TREE_WITH_INVALID_LEFT_CHILD));
+        void shouldReturnTrue_whenEvaluatingUnbalancedTreeWithDepthTenThousandTailRecursively() {
+            assertTrue(TailRecursiveEvaluation.isValidSumTree(UNBALANCED_TREE_WITH_DEPTH_TEN_THOUSAND));
         }
 
-        @Test
-        void shouldReturnFalse_whenEvaluatingTreeWithInvalidRightChild() {
-            System.out.println(calculateSumRecursively(TREE_WITH_INVALID_RIGHT_CHILD)); // todo just for illustration
-            assertFalse(isValidSumTree(TREE_WITH_INVALID_RIGHT_CHILD));
+        @Nested
+        class RecursiveEvaluation {
+            @Test
+            void shouldReturnTrue_whenEvaluatingEmptyTree() {
+                System.out.println(calculateSumRecursively(EMPTY_TREE)); // todo just for illustration
+                assertTrue(isValidSumTree(EMPTY_TREE));
+            }
+
+            @ParameterizedTest
+            @MethodSource("validTrees")
+            void shouldReturnTrue_whenEvaluatingValidTree(SumTreeNode validTree) {
+                System.out.println(calculateSumRecursively(validTree)); // todo just for illustration
+                assertTrue(isValidSumTree(validTree));
+            }
+
+            static Stream<SumTreeNode> validTrees() {
+                return Stream.of(VALID_TREE_1, VALID_TREE_2, VALID_TREE_3, VALID_TREE_4);
+            }
+
+            @Test
+            void shouldReturnFalse_whenEvaluatingTreeWithInvalidLeftChild() {
+                System.out.println(calculateSumRecursively(TREE_WITH_INVALID_LEFT_CHILD)); // todo just for illustration
+                assertFalse(isValidSumTree(TREE_WITH_INVALID_LEFT_CHILD));
+            }
+
+            @Test
+            void shouldReturnFalse_whenEvaluatingTreeWithInvalidRightChild() {
+                System.out.println(calculateSumRecursively(TREE_WITH_INVALID_RIGHT_CHILD)); // todo just for illustration
+                assertFalse(isValidSumTree(TREE_WITH_INVALID_RIGHT_CHILD));
+            }
+
+            @Test
+            void shouldReturnFalse_whenEvaluatingTreeWithInvalidRoot() {
+                System.out.println(calculateSumRecursively(TREE_WITH_INVALID_ROOT)); // todo just for illustration
+                assertFalse(isValidSumTree(TREE_WITH_INVALID_ROOT));
+            }
+
+            private static boolean isValidSumTree(SumTreeNode root) {
+                return calculateSumRecursively(root).isOk();
+            }
+
+            private static Result<BigInteger, IllegalArgumentException> calculateSumRecursively(SumTreeNode currentNode) {
+                return Result.<BigInteger, IllegalArgumentException>boundary(
+                        IllegalArgumentException::new
+                ).attempt(boundary -> {
+                    if (currentNode.leftChild().isEmpty() && currentNode.rightChild().isEmpty()) {
+                        return currentNode.value();
+                    }
+
+                    BigInteger leftChildSum = currentNode
+                            .leftChild()
+                            .map(child -> calculateSumRecursively(child).orBreak(boundary))
+                            .getOrElse(BigInteger.valueOf(0));
+
+                    BigInteger rightChildSum = currentNode
+                            .rightChild()
+                            .map(child -> calculateSumRecursively(child).orBreak(boundary))
+                            .getOrElse(BigInteger.valueOf(0));
+
+                    BigInteger totalChildSum = leftChildSum.add(rightChildSum);
+                    if (!currentNode.value().equals(totalChildSum)) {
+                        return boundary.breakErr(new IllegalArgumentException("Node has value = %d, but children have sum = %d".formatted(currentNode.value(), totalChildSum)));
+                    } else {
+                        return currentNode.value().add(totalChildSum);
+                    }
+                });
+            }
         }
 
-        @Test
-        void shouldReturnFalse_whenEvaluatingTreeWithInvalidRoot() {
-            System.out.println(calculateSumRecursively(TREE_WITH_INVALID_ROOT)); // todo just for illustration
-            assertFalse(isValidSumTree(TREE_WITH_INVALID_ROOT));
-        }
+        @Nested
+        class TailRecursiveEvaluation {
+            @Test
+            void shouldReturnTrue_whenEvaluatingEmptyTree() {
+                assertTrue(isValidSumTree(EMPTY_TREE));
+            }
 
-        private boolean isValidSumTree(SumTreeNode root) {
-            return calculateSumRecursively(root).isOk();
-        }
+            @ParameterizedTest
+            @MethodSource("validTrees")
+            void shouldReturnTrue_whenEvaluatingValidTree(SumTreeNode validTree) {
+                assertTrue(isValidSumTree(validTree));
+            }
 
-        private Result<Integer, IllegalArgumentException> calculateSumRecursively(SumTreeNode currentNode) {
-            return Result.<Integer, IllegalArgumentException>boundary(
-                    IllegalArgumentException::new
-            ).attempt(boundary -> {
-                if (currentNode.leftChild().isEmpty() && currentNode.rightChild().isEmpty()) {
-                    return currentNode.value();
+            static Stream<SumTreeNode> validTrees() {
+                return Stream.of(VALID_TREE_1, VALID_TREE_2, VALID_TREE_3, VALID_TREE_4);
+            }
+
+            @Test
+            void shouldReturnFalse_whenEvaluatingTreeWithInvalidLeftChild() {
+                assertFalse(isValidSumTree(TREE_WITH_INVALID_LEFT_CHILD));
+            }
+
+            @Test
+            void shouldReturnFalse_whenEvaluatingTreeWithInvalidRightChild() {
+                assertFalse(isValidSumTree(TREE_WITH_INVALID_RIGHT_CHILD));
+            }
+
+            @Test
+            void shouldReturnFalse_whenEvaluatingTreeWithInvalidRoot() {
+                assertFalse(isValidSumTree(TREE_WITH_INVALID_ROOT));
+            }
+
+            private static boolean isValidSumTree(SumTreeNode root) {
+                return TailRecursion.run(CurrentStep.initial(root),
+                        (recursion, currentStep) -> switch (currentStep.next()) {
+                            case NextStep.Continue(CurrentStep next) -> recursion.continue_(next);
+                            case NextStep.Yield(boolean result) -> recursion.yield(result);
+                        }
+                );
+            }
+
+            private sealed interface ParentStep {
+                NextStep provideSum(Option<BigInteger> childSum);
+
+                record AwaitingLeftChild(
+                        Option<ParentStep> parentStep,
+                        SumTreeNode currentNode
+                ) implements ParentStep {
+                    @Override
+                    public NextStep provideSum(Option<BigInteger> leftChildSum) {
+                        AwaitingRightChild awaitingRightChildOfCurrent = new AwaitingRightChild(parentStep, currentNode, leftChildSum);
+                        CurrentStep.VisitRightChild visitRightChildOfCurrent = new CurrentStep.VisitRightChild(awaitingRightChildOfCurrent, currentNode);
+                        return new NextStep.Continue(visitRightChildOfCurrent);
+                    }
                 }
 
-                int leftChildSum = currentNode
-                        .leftChild()
-                        .map(child -> calculateSumRecursively(child).orBreak(boundary))
-                        .getOrElse(0);
+                record AwaitingRightChild(
+                        Option<ParentStep> parentStep,
+                        SumTreeNode currentNode,
+                        Option<BigInteger> leftChildSum
+                ) implements ParentStep {
+                    @Override
+                    public NextStep provideSum(Option<BigInteger> rightChildSum) {
+                        CurrentStep.ValidateChildSum validateChildSum = new CurrentStep.ValidateChildSum(parentStep, currentNode, getTotalChildSum(leftChildSum, rightChildSum));
+                        return new NextStep.Continue(validateChildSum);
+                    }
 
-                int rightChildSum = currentNode
-                        .rightChild()
-                        .map(child -> calculateSumRecursively(child).orBreak(boundary))
-                        .getOrElse(0);
-
-                int totalChildSum = leftChildSum + rightChildSum;
-                if (currentNode.value() != totalChildSum) {
-                    return boundary.breakErr(new IllegalArgumentException("Node has value = %d, but children have sum = %d".formatted(currentNode.value(), totalChildSum)));
-                } else {
-                    return currentNode.value() + totalChildSum;
+                    private Option<BigInteger> getTotalChildSum(Option<BigInteger> leftChildSum, Option<BigInteger> rightChildSum) {
+                        return Option
+                                .and(leftChildSum, rightChildSum, BigInteger::add)
+                                .orElse(leftChildSum)
+                                .orElse(rightChildSum);
+                    }
                 }
-            });
+            }
+
+            private sealed interface CurrentStep {
+                static CurrentStep initial(SumTreeNode root) {
+                    ParentStep.AwaitingLeftChild awaitingLeftChildOfRoot = new ParentStep.AwaitingLeftChild(Option.none(), root);
+                    return new CurrentStep.VisitLeftChild(awaitingLeftChildOfRoot, root);
+                }
+
+                NextStep next();
+
+                record VisitLeftChild(
+                        ParentStep parentStep,
+                        SumTreeNode currentNode
+                ) implements CurrentStep {
+                    @Override
+                    public NextStep next() {
+                        return switch (currentNode.leftChild()) {
+                            case Some(SumTreeNode leftChild) -> {
+                                ParentStep.AwaitingLeftChild awaitingLeftChildOfLeftChild = new ParentStep.AwaitingLeftChild(Option.some(parentStep), leftChild);
+                                CurrentStep.VisitLeftChild visitLeftChildOfLeftChild = new CurrentStep.VisitLeftChild(awaitingLeftChildOfLeftChild, leftChild);
+                                yield new NextStep.Continue(visitLeftChildOfLeftChild);
+                            }
+                            case None() -> parentStep.provideSum(Option.none());
+                        };
+                    }
+                }
+
+                record VisitRightChild(
+                        ParentStep parentStep,
+                        SumTreeNode currentNode
+                ) implements CurrentStep {
+                    @Override
+                    public NextStep next() {
+                        return switch (currentNode.rightChild()) {
+                            case Some(SumTreeNode rightChild) -> {
+                                ParentStep.AwaitingLeftChild awaitingLeftChildOfRightChild = new ParentStep.AwaitingLeftChild(Option.some(parentStep), rightChild);
+                                CurrentStep.VisitLeftChild visitLeftChildOfRightChild = new CurrentStep.VisitLeftChild(awaitingLeftChildOfRightChild, rightChild);
+                                yield new NextStep.Continue(visitLeftChildOfRightChild);
+                            }
+                            case None() -> parentStep.provideSum(Option.none());
+                        };
+                    }
+                }
+
+                record ValidateChildSum(
+                        Option<ParentStep> parentStep,
+                        SumTreeNode currentNode,
+                        Option<BigInteger> totalChildSum
+                ) implements CurrentStep {
+                    @Override
+                    public NextStep next() {
+                        return switch (totalChildSum) {
+                            case Some(BigInteger totalChildSum) -> {
+                                if (!currentNode.value().equals(totalChildSum)) {
+                                    yield new NextStep.Yield(false);
+                                } else {
+                                    yield provideSumToParent(currentNode.value().add(totalChildSum));
+                                }
+                            }
+                            case None() -> provideSumToParent(currentNode.value());
+                        };
+                    }
+
+                    private NextStep provideSumToParent(BigInteger totalSum) {
+                        return switch (parentStep) {
+                            case Some(ParentStep parent) -> parent.provideSum(Option.some(totalSum));
+                            case None() -> new NextStep.Yield(true);
+                        };
+                    }
+                }
+            }
+
+            sealed interface NextStep {
+                record Continue(CurrentStep next) implements NextStep {}
+
+                record Yield(boolean result) implements NextStep {}
+            }
         }
 
         private record SumTreeNode(
-                int value,
+                BigInteger value,
                 Option<SumTreeNode> leftChild,
                 Option<SumTreeNode> rightChild
         ) {
 
-            public static SumTreeNode full(int value, SumTreeNode leftChild, SumTreeNode rightChild) {
+            public static SumTreeNode full(BigInteger value, SumTreeNode leftChild, SumTreeNode rightChild) {
                 return new SumTreeNode(value, Option.some(leftChild), Option.some(rightChild));
             }
 
-            public static SumTreeNode leftFull(int value, SumTreeNode leftChild) {
+            public static SumTreeNode leftFull(BigInteger value, SumTreeNode leftChild) {
                 return new SumTreeNode(value, Option.some(leftChild), Option.none());
             }
 
-            public static SumTreeNode rightFull(int value, SumTreeNode rightChild) {
+            public static SumTreeNode rightFull(BigInteger value, SumTreeNode rightChild) {
                 return new SumTreeNode(value, Option.none(), Option.some(rightChild));
             }
 
-            public static SumTreeNode leaf(int value) {
+            public static SumTreeNode leaf(BigInteger value) {
                 return new SumTreeNode(value, Option.none(), Option.none());
             }
         }
+
+        //region makeUnbalanceSumTree
+        private static SumTreeNode makeUnbalancedSumTree(int depth) {
+            return TailRecursion.run(MakeUnbalancedSumTree.initial(depth, getSumTreeNodeValueIterator()),
+                    (recursion, makeUnbalancedSumTree) -> switch (makeUnbalancedSumTree.next()) {
+                        case MakeUnbalancedSumTree.NextStep.Continue(MakeUnbalancedSumTree next) -> recursion.continue_(next);
+                        case MakeUnbalancedSumTree.NextStep.Yield(SumTreeNode root) -> recursion.yield(root);
+                    });
+        }
+
+        private static Iterator<BigInteger> getSumTreeNodeValueIterator() {
+            return StreamEx
+                    .iterate(BigInteger.valueOf(1), bigInteger -> bigInteger.multiply(BigInteger.valueOf(2)))
+                    .prepend(BigInteger.valueOf(1)) // values should be: 1, 1, 2, 4, 8, 16, etc
+                    .iterator();
+        }
+
+        sealed interface MakeUnbalancedSumTree {
+            static MakeUnbalancedSumTree initial(int depth, Iterator<BigInteger> valueIterator) {
+                return new MakeUnbalancedSumTree.GoDown(depth, 0, valueIterator);
+            }
+
+            NextStep next();
+
+            record GoDown(
+                    int maxDepth,
+                    int currentDepth,
+                    Iterator<BigInteger> valueIterator
+            ) implements MakeUnbalancedSumTree {
+                @Override
+                public NextStep next() {
+                    if (currentDepth == maxDepth) {
+                        SumTreeNode node = SumTreeNode.leaf(valueIterator.next());
+                        GoUp goUp = new GoUp(maxDepth, node, valueIterator);
+                        return new NextStep.Continue(goUp);
+                    } else {
+                        GoDown goDown = new GoDown(maxDepth, currentDepth + 1, valueIterator);
+                        return new NextStep.Continue(goDown);
+                    }
+                }
+            }
+
+            record GoUp(
+                    int currentDepth,
+                    SumTreeNode child,
+                    Iterator<BigInteger> valueIterator
+            ) implements MakeUnbalancedSumTree {
+                @Override
+                public NextStep next() {
+                    SumTreeNode node = ThreadLocalRandom.current().nextBoolean() // randomly alternate between creating a left or a right child
+                            ? SumTreeNode.leftFull(valueIterator.next(), child)
+                            : SumTreeNode.rightFull(valueIterator.next(), child);
+                    if (currentDepth == 0) {
+                        return new NextStep.Yield(node);
+                    } else {
+                        GoUp goUp = new GoUp(currentDepth - 1, node, valueIterator);
+                        return new NextStep.Continue(goUp);
+                    }
+                }
+            }
+
+            sealed interface NextStep {
+                record Continue(MakeUnbalancedSumTree next) implements NextStep {}
+
+                record Yield(SumTreeNode root) implements NextStep {}
+            }
+        }
+        //endregion
     }
 
     @Nested

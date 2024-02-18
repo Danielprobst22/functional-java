@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.function.Function;
 
-public class BoundaryWithContext<T, E extends ContextfulError> extends AbstractBoundary<T, E> {
+public class BoundaryWithContext<T, E extends ContextfulError> extends AbstractBoundary<T, E, Throwable> {
     private final Function<Throwable, E> unadaptedMapThrowable;
     private ErrorContext context;
 

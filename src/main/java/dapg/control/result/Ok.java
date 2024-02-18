@@ -24,12 +24,12 @@ public record Ok<T, E>(@NonNull T value) implements Result<T, E> {
     }
 
     @Override
-    public T orBreak(@NonNull AbstractBoundary<?, ? super E> boundary) {
+    public T orBreak(@NonNull AbstractBoundary<?, ? super E, ?> boundary) {
         return value;
     }
 
     @Override
-    public T orBreakThrowable(@NonNull AbstractBoundary<?, ?> boundary, @NonNull Function<E, Throwable> mapErr) {
+    public T orBreakThrowable(@NonNull AbstractBoundary<?, ?, ? super E> boundary) {
         return value;
     }
 }

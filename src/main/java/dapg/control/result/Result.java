@@ -62,7 +62,7 @@ public sealed interface Result<T, E> extends Serializable permits Ok, Err {
 
     <EE> Result<T, EE> mapErr(@NonNull Function<E, EE> mapErr);
 
-    T orBreak(@NonNull AbstractBoundary<?, ? super E> boundary);
+    T orBreak(@NonNull AbstractBoundary<?, ? super E, ?> boundary);
 
     /**
      * todo write proper doc
@@ -72,8 +72,7 @@ public sealed interface Result<T, E> extends Serializable permits Ok, Err {
      * so further complicating the design of BoundaryWithContext to handle this edge case does not seem worth the trade-off <br>
      *
      * @param boundary
-     * @param mapErr
      * @return
      */
-    T orBreakThrowable(@NonNull AbstractBoundary<?, ?> boundary, @NonNull Function<E, Throwable> mapErr);
+    T orBreakThrowable(@NonNull AbstractBoundary<?, ?, ? super E> boundary);
 }

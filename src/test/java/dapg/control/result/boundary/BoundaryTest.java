@@ -80,7 +80,7 @@ class BoundaryTest {
                 throwable -> new IllegalArgumentException("Cannot parse values", throwable)
         ).attempt(boundary -> StreamEx
                 .of(values)
-                .map(value -> parseWithThrowable(value).orBreakThrowable(boundary, err -> err))
+                .map(value -> parseWithThrowable(value).orBreakThrowable(boundary))
                 .toList()
         );
     }

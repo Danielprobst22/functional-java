@@ -123,7 +123,7 @@ class BoundaryWithContextTest {
                 C.id(42), C.state(DummyState.INITIAL), C.foo("dummy foo"), C.bar("dummy bar")
         ).attempt(boundary -> StreamEx
                 .of(values)
-                .map(value -> parseWithThrowable(value).orBreakThrowable(boundary, err -> err))
+                .map(value -> parseWithThrowable(value).orBreakThrowable(boundary))
                 .toList()
         );
     }

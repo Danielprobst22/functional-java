@@ -6,7 +6,7 @@ import lombok.NonNull;
 
 import java.util.function.Function;
 
-public class Boundary<T, E> extends AbstractBoundary<T, E> {
+public class Boundary<T, E> extends AbstractBoundary<T, E, Throwable> {
 
     public Boundary(@NonNull Function<Throwable, E> mapThrowable) {
         super(mapThrowable);

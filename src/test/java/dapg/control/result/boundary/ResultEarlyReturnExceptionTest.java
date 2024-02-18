@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ThrowableEarlyReturnExceptionTest {
+class ResultEarlyReturnExceptionTest {
 
     @Test
     void shouldThrowException_whenPassingNullToConstructor() {
         //noinspection DataFlowIssue,ThrowableNotThrown
-        assertThrows(NullPointerException.class, () -> new ThrowableEarlyReturnException(null));
+        assertThrows(NullPointerException.class, () -> new ResultEarlyReturnException(null));
     }
 }

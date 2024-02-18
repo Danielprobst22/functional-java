@@ -64,15 +64,5 @@ public sealed interface Result<T, E> extends Serializable permits Ok, Err {
 
     T orBreak(@NonNull AbstractBoundary<?, ? super E, ?> boundary);
 
-    /**
-     * todo write proper doc
-     * In this scenario, dummyContextEntry will be ignored: <br>
-     * dummyResult.orBreakThrowable(boundary.addContext(dummyContextEntry), err -> err) <br>
-     * However, orBreakThrowable() is a function that might be nice to have in certain circumstances but is not expected to be used too extensively,
-     * so further complicating the design of BoundaryWithContext to handle this edge case does not seem worth the trade-off <br>
-     *
-     * @param boundary
-     * @return
-     */
     T orBreakThrowable(@NonNull AbstractBoundary<?, ?, ? super E> boundary);
 }

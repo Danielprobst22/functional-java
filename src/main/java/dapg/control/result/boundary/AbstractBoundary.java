@@ -2,16 +2,10 @@ package dapg.control.result.boundary;
 
 import dapg.control.result.Result;
 import io.vavr.CheckedFunction1;
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
-import java.util.function.Function;
-
-@AllArgsConstructor
 public abstract class AbstractBoundary<OkT, ErrT, ThrowableProofT extends Throwable> {
-    @NonNull
-    protected Function<Throwable, ErrT> mapThrowable;
 
     @SneakyThrows
     protected <SelfT extends AbstractBoundary<OkT, ErrT, ThrowableProofT>> Result<OkT, ErrT> attempt(SelfT boundary, CheckedFunction1<SelfT, OkT> fn) {
@@ -20,17 +14,17 @@ public abstract class AbstractBoundary<OkT, ErrT, ThrowableProofT extends Throwa
             return Result.ok(value);
         } catch (InterruptedException | LinkageError | VirtualMachineError e) {
             throw e; // these fatal exceptions should not be caught
-        } catch (ErrEarlyReturnException e) {
+        } catch (ResultEarlyReturnException e) {
             //noinspection unchecked
             return Result.err((ErrT) e.err);
-        } catch (ThrowableEarlyReturnException e) {
-            return Result.err(mapThrowable.apply(e.throwable));
         } catch (Throwable e) {
-            return Result.err(mapThrowable.apply(e));
+            return Result.err(mapThrowable(e));
         }
     }
 
-    public abstract  <PhantomT> PhantomT breakErr(@NonNull ErrT err);
+    public abstract <PhantomT> PhantomT breakErr(@NonNull ErrT err);
 
-    public abstract  <PhantomT> PhantomT breakThrowable(@NonNull ThrowableProofT throwable);
+    public abstract <PhantomT> PhantomT breakThrowable(@NonNull ThrowableProofT throwable);
+
+    protected abstract ErrT mapThrowable(Throwable throwable);
 }

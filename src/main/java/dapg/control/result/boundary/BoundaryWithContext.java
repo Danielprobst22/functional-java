@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public class BoundaryWithContext<T, E extends ContextfulError> extends AbstractBoundary<T, E, Throwable> {
-    private final Function<Throwable, E> unadaptedMapThrowable;
+    private final Function<Throwable, E> mapThrowable;
     private ErrorContext context;
 
     @SafeVarargs
@@ -19,18 +19,9 @@ public class BoundaryWithContext<T, E extends ContextfulError> extends AbstractB
         this(mapThrowable, ErrorContext.of(contextEntries));
     }
 
-    private BoundaryWithContext(Function<Throwable, E> mapThrowable, ErrorContext errorContext) {
-        super(adaptMapThrowable(mapThrowable, errorContext));
-        unadaptedMapThrowable = mapThrowable;
-        context = errorContext;
-    }
-
-    private static <E extends ContextfulError> Function<Throwable, E> adaptMapThrowable(Function<Throwable, E> mapThrowable, ErrorContext errorContext) {
-        return throwable -> {
-            E err = mapThrowable.apply(throwable);
-            err.addContext(errorContext);
-            return err;
-        };
+    private BoundaryWithContext(Function<Throwable, E> mapThrowable, ErrorContext context) {
+        this.mapThrowable = mapThrowable;
+        this.context = context;
     }
 
     public Result<T, E> attempt(@NonNull CheckedFunction1<BoundaryWithContext<T, E>, T> fn) {
@@ -39,13 +30,12 @@ public class BoundaryWithContext<T, E extends ContextfulError> extends AbstractB
 
     @SafeVarargs
     public final BoundaryWithContext<T, E> addContext(@NonNull Map.Entry<String, ? extends Serializable>... contextEntries) {
-        return new BoundaryWithContext<>(unadaptedMapThrowable, context.add(contextEntries));
+        return new BoundaryWithContext<>(mapThrowable, context.add(contextEntries));
     }
 
     @SafeVarargs
     public final void addToContext(@NonNull Map.Entry<String, ? extends Serializable>... contextEntries) {
         context = context.add(contextEntries);
-        mapThrowable = adaptMapThrowable(unadaptedMapThrowable, context);
     }
 
     public String getContextAsString() {
@@ -55,11 +45,18 @@ public class BoundaryWithContext<T, E extends ContextfulError> extends AbstractB
     @Override
     public <PhantomT> PhantomT breakErr(@NonNull E err) {
         err.addContext(context);
-        throw new ErrEarlyReturnException(err);
+        throw new ResultEarlyReturnException(err);
     }
 
     @Override
     public <PhantomT> PhantomT breakThrowable(@NonNull Throwable throwable) {
-        throw new ThrowableEarlyReturnException(throwable);
+        throw new ResultEarlyReturnException(mapThrowable(throwable));
+    }
+
+    @Override
+    protected E mapThrowable(Throwable throwable) {
+        E err = mapThrowable.apply(throwable);
+        err.addContext(context);
+        return err;
     }
 }

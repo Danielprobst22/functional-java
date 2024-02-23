@@ -415,11 +415,19 @@ class SumTreeTest {
 
         //region makeUnbalanceSumTree
         private static SumTreeNode makeUnbalancedSumTree(int depth) {
-            return TailRecursion.run(MakeUnbalancedSumTree.initial(depth, getSumTreeNodeValueIterator()),
-                    (recursion, makeUnbalancedSumTree) -> switch (makeUnbalancedSumTree.next()) {
-                        case MakeUnbalancedSumTree.NextStep.Continue(MakeUnbalancedSumTree next) -> recursion.continue_(next);
-                        case MakeUnbalancedSumTree.NextStep.Yield(SumTreeNode root) -> recursion.yield(root);
-                    });
+            Iterator<BigInteger> valueIterator = getSumTreeNodeValueIterator();
+            return TailRecursion.run(SumTreeNode.leaf(valueIterator.next()), depth,
+                    (recursion, childNode, currentDepth) -> {
+                        SumTreeNode currentNode = ThreadLocalRandom.current().nextBoolean() // randomly alternate between creating a left or a right child
+                                ? SumTreeNode.leftFull(valueIterator.next(), childNode)
+                                : SumTreeNode.rightFull(valueIterator.next(), childNode);
+                        if (currentDepth == 0) {
+                            return recursion.yield(currentNode);
+                        } else {
+                            return recursion.continue_(currentNode, currentDepth - 1);
+                        }
+                    }
+            );
         }
 
         private static Iterator<BigInteger> getSumTreeNodeValueIterator() {
@@ -427,57 +435,6 @@ class SumTreeTest {
                     .iterate(BigInteger.valueOf(1), bigInteger -> bigInteger.multiply(BigInteger.valueOf(2)))
                     .prepend(BigInteger.valueOf(1)) // values should be: 1, 1, 2, 4, 8, 16, etc
                     .iterator();
-        }
-
-        sealed interface MakeUnbalancedSumTree {
-            static MakeUnbalancedSumTree initial(int depth, Iterator<BigInteger> valueIterator) {
-                return new MakeUnbalancedSumTree.GoDown(depth, 0, valueIterator);
-            }
-
-            NextStep next();
-
-            record GoDown(
-                    int maxDepth,
-                    int currentDepth,
-                    Iterator<BigInteger> valueIterator
-            ) implements MakeUnbalancedSumTree {
-                @Override
-                public NextStep next() {
-                    if (currentDepth == maxDepth) {
-                        SumTreeNode node = SumTreeNode.leaf(valueIterator.next());
-                        GoUp goUp = new GoUp(maxDepth, node, valueIterator);
-                        return new NextStep.Continue(goUp);
-                    } else {
-                        GoDown goDown = new GoDown(maxDepth, currentDepth + 1, valueIterator);
-                        return new NextStep.Continue(goDown);
-                    }
-                }
-            }
-
-            record GoUp(
-                    int currentDepth,
-                    SumTreeNode child,
-                    Iterator<BigInteger> valueIterator
-            ) implements MakeUnbalancedSumTree {
-                @Override
-                public NextStep next() {
-                    SumTreeNode node = ThreadLocalRandom.current().nextBoolean() // randomly alternate between creating a left or a right child
-                            ? SumTreeNode.leftFull(valueIterator.next(), child)
-                            : SumTreeNode.rightFull(valueIterator.next(), child);
-                    if (currentDepth == 0) {
-                        return new NextStep.Yield(node);
-                    } else {
-                        GoUp goUp = new GoUp(currentDepth - 1, node, valueIterator);
-                        return new NextStep.Continue(goUp);
-                    }
-                }
-            }
-
-            sealed interface NextStep {
-                record Continue(MakeUnbalancedSumTree next) implements NextStep {}
-
-                record Yield(SumTreeNode root) implements NextStep {}
-            }
         }
         //endregion
     }

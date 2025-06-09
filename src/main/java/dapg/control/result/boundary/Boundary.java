@@ -30,4 +30,7 @@ public class Boundary<T, E> extends AbstractBoundary<T, E, Throwable> {
     protected E mapThrowable(Throwable throwable) {
         return mapThrowable.apply(throwable);
     }
+
+    // todo Proper impl
+    // tryMapValueOrBreak()
 }

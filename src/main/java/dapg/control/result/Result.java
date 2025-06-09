@@ -10,6 +10,7 @@ import lombok.NonNull;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public sealed interface Result<T, E> extends Serializable permits Ok, Err {
 
@@ -19,6 +20,17 @@ public sealed interface Result<T, E> extends Serializable permits Ok, Err {
 
     static <T, E> Result<T, E> err(@NonNull E err) {
         return new Err<>(err);
+    }
+
+    // todo proper impl - Add version with generic err type
+    static <T> Result<T, Throwable> when(
+            boolean condition,
+            @NonNull Supplier<? extends T> okValue,
+            @NonNull Supplier<? extends Throwable> errValue
+    ) {
+        return condition
+                ? Result.ok(okValue.get())
+                : Result.err(errValue.get());
     }
 
     static <T> Result<T, Throwable> attempt(

@@ -24,6 +24,9 @@ public sealed interface Option<T> extends Serializable permits Some, None {
         return (Option<T>) None.INSTANCE;
     }
 
+    // todo proper impl
+//    static <T> Option<T> when()
+
     static <T1, T2, R> Option<R> and(
             @NonNull Option<T1> o1,
             @NonNull Option<T2> o2,

@@ -1,0 +1,163 @@
+package dapg.data.alias.product;
+
+import dapg.data.alias.AliasKey;
+import dapg.data.alias.product.api.Nm;
+import dapg.data.alias.product.util.valueprovider.AddAliasValue;
+import dapg.data.alias.product.util.valueprovider.AliasValueProvider;
+import dapg.data.alias.product.util.valueprovider.MapAliasValue;
+import dapg.data.alias.product.util.valueprovider.SelectAliasValue;
+import dapg.function.unchecked.Fn3;
+
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
+import java.util.Arrays;
+
+import static dapg.data.alias.product.util.internal.NmUtil.*;
+
+// todo make sealed
+public abstract class NmProduct {
+    // Atomicity follows same design/implementation of AtomicReferenceArray#compareAndSet
+    private static final VarHandle VALUES = MethodHandles.arrayElementVarHandle(Object[].class);
+    // Always length 12 - can be shared between multiple product instances
+    protected final Object[] values;
+    // Always length 12 - can be shared between multiple product instances
+    protected final AliasKey<?>[] keys;
+    // Always length 12 - never shared with other product instances
+    protected final byte[] indices;
+
+    // todo delete if not needed
+    protected NmProduct() {
+        values = new Object[MAX_ARITY];
+        Arrays.fill(values, EMPTY_VALUE_SLOT_PLACEHOLDER);
+
+        keys = new AliasKey<?>[MAX_ARITY];
+        Arrays.fill(keys, null); // todo proper impl
+
+        indices = new byte[MAX_ARITY];
+        Arrays.fill(indices, EMPTY_INDEX_SLOT_PLACEHOLDER);
+    }
+
+    protected NmProduct(Object[] values, AliasKey<?>[] keys, byte[] indices) {
+        this.values = values;
+        this.keys = keys;
+        this.indices = indices;
+    }
+
+    protected Object untypedValueAtPosition(AliasKey<?> key, int positionInProduct) {
+        byte index = indices[positionInProduct];
+        if (keys[index] != key) {
+            String msg = mismatchedAliasKeyErrorMessage(key, positionInProduct);
+            throw new IllegalArgumentException(msg);
+        }
+        return values[index];
+    }
+
+    //region Copy helper methods
+    protected Nm untypedCopy(
+            Fn3<Object[], AliasKey<?>[], byte[], Nm> nmInstanceConstructor,
+            AliasValueProvider<?, ?>... valueProviders
+    ) {
+        if (copyInPlaceMightBePossible(valueProviders) && optimisticLockingSucceeded(valueProviders)) {
+            return copyInPlace(nmInstanceConstructor, valueProviders);
+        } else {
+            return copyWithNewValuesArray(nmInstanceConstructor, valueProviders);
+        }
+    }
+
+    private boolean copyInPlaceMightBePossible(AliasValueProvider<?, ?>[] valueProviders) {
+        for (int currentPosition = 0; currentPosition < valueProviders.length; currentPosition++) {
+            AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
+            boolean copyInPlaceMightBePossible = switch (valueProvider) {
+                // todo explain
+                case AddAliasValue(_, _), MapAliasValue(_) -> values[currentPosition] == EMPTY_VALUE_SLOT_PLACEHOLDER;
+                // todo Reads the value
+                case SelectAliasValue(_) -> true;
+            };
+            if (!copyInPlaceMightBePossible) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean optimisticLockingSucceeded(AliasValueProvider<?, ?>[] valueProviders) {
+        for (int currentPosition = 0; currentPosition < valueProviders.length; currentPosition++) {
+            AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
+            boolean optimisticLockingSucceeded = switch (valueProvider) {
+                // todo explain
+                case AddAliasValue(_, _), MapAliasValue(_) -> VALUES.compareAndSet(values, currentPosition, EMPTY_VALUE_SLOT_PLACEHOLDER, RESERVED_VALUE_SLOT_PLACEHOLDER);
+                // todo not necessary
+                case SelectAliasValue(_) -> true;
+            };
+            if (!optimisticLockingSucceeded) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private Nm copyInPlace(
+            Fn3<Object[], AliasKey<?>[], byte[], Nm> nmInstanceConstructor,
+            AliasValueProvider<?, ?>[] valueProviders
+    ) {
+        byte[] newIndices = allocateEmptyIndicesArray();
+        for (int currentPosition = 0; currentPosition < valueProviders.length; currentPosition++) {
+            AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
+            switch (valueProvider) {
+                case AddAliasValue(AliasKey<?> key, Object value) -> {
+                    boolean optimisticLockingUpheld = VALUES.compareAndSet(values, currentPosition, RESERVED_VALUE_SLOT_PLACEHOLDER, value);
+                    if (!optimisticLockingUpheld) {
+                        throw new IllegalStateException(optimisticLockingNotUpheldErrorMessage(currentPosition));
+                    }
+                    keys[currentPosition] = key;
+                    newIndices[currentPosition] = (byte) currentPosition;
+                }
+                case MapAliasValue(int positionInProduct) -> {
+                    // todo proper impl
+                    newIndices[currentPosition] = (byte) currentPosition;
+                }
+                case SelectAliasValue(int positionInProduct) -> {
+                    // todo proper impl
+                    newIndices[currentPosition] = (byte) currentPosition;
+                }
+            }
+        }
+        // todo proper impl
+        return null;
+    }
+
+    private Nm copyWithNewValuesArray(
+            Fn3<Object[], AliasKey<?>[], byte[], Nm> nmInstanceConstructor,
+            AliasValueProvider<?, ?>[] valueProviders
+    ) {
+        // todo proper impl
+        return null;
+    }
+    //endregion
+
+    //region Error helper methods
+    private String mismatchedAliasKeyErrorMessage(
+            AliasKey<?> providedKey,
+            int positionInProduct
+    ) {
+        byte index = indices[positionInProduct];
+        AliasKey<?> actualKey = keys[index];
+        Object value = values[index];
+        String classOfProduct = this.getClass().getSimpleName();
+        return String.format(
+                "Provided AliasKey='%s' does not match AliasKey='%s' for value='%s' at position=%d of NmProduct='%s'",
+                providedKey.displayName(), actualKey.displayName(), value, positionInProduct, classOfProduct
+        );
+    }
+
+    private String optimisticLockingNotUpheldErrorMessage(int positionInProduct) {
+        String classOfProduct = this.getClass().getSimpleName();
+        Object value = values[positionInProduct];
+        return String.format(
+                "Copying NmProduct='%s' failed - optimistic locking was not upheld: " +
+                        "value='%s' at position=%d did not match expected constant='RESERVED_VALUE_SLOT_PLACEHOLDER'",
+                classOfProduct, value, positionInProduct
+        );
+    }
+    //endregion
+}

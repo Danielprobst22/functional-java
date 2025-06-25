@@ -10,8 +10,10 @@ import java.util.Map;
 //public class JStructTest<T1, T2, T3, SelfT extends Pr<SelfT>> {
 public class JStructTest {
 
-    public static abstract class JStruct {
+    public static abstract class JStruct<SelfT extends JStruct<SelfT>> {
         // protected Map<AliasKey<?>, Object> unsafeValues();
+//        protected final Object[] values;
+//        protected final AliasKey<?>[] indices;
 
         // todo doesn't work because Java is...
 //        static <T1, T2, T3 extends T1 & T2> void aha(Option<? >) {

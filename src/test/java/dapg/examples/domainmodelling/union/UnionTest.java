@@ -1,4 +1,4 @@
-package dapg.examples.domainmodelling;
+package dapg.examples.domainmodelling.union;
 
 import org.junit.jupiter.api.Test;
 
@@ -157,6 +157,7 @@ public class UnionTest {
         }
     }
 
+//    private record Un2T1<T1, T2>(T1 value) implements Un2<T1, T2> {}
     private record Un2T1<T1, T2>(T1 value) implements Un2<T1, T2> {}
 
     private record Un2T2<T1, T2>(T2 value) implements Un2<T1, T2> {}

@@ -2,7 +2,7 @@ package dapg.control.result.boundary;
 
 import lombok.NonNull;
 
-// package private
+// package-private
 class ResultEarlyReturnException extends RuntimeException {
     // ignore "Make "err" transient or serializable."
     // -> ResultEarlyReturnException is immediately caught by its enclosing boundary so there shouldn't arise the need to serialize it

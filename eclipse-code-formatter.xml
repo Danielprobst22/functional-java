@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- todo delete config if plugin not used-->
 <profiles version="12">
 	<profile kind="CodeFormatterProfile" name="Spring Boot Java Conventions" version="12">
 		<setting id="org.eclipse.jdt.core.formatter.insert_space_after_ellipsis"

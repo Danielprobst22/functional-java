@@ -5,9 +5,14 @@ import dapg.data.alias.product.api.Nm;
 
 // todo import org.jetbrains.annotations.ApiStatus;
 //  @ApiStatus.Internal
+//fmt:off
 public record MapAliasValue<
-        NmInstanceT extends Nm,
-        AliasT extends Alias<?>
-        // todo proper impl
-        >(int positionInProduct) implements AliasValueProvider<NmInstanceT, AliasT> {
+    NmInstanceT extends Nm,
+    AliasT extends Alias<?>
+> (
+    int positionInProduct
+)
+    implements AliasValueProvider<NmInstanceT, AliasT>
+{ //fmt:on
+
 }

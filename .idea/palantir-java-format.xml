@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- todo delete config if plugin not used-->
 <project version="4">
   <component name="PalantirJavaFormatSettings">
-    <option name="enabled" value="true" />
+    <option name="enabled" value="false" />
   </component>
 </project>

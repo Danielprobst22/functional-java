@@ -1,12 +1,11 @@
 package dapg.data.alias.product;
 
 import dapg.data.alias.AliasKey;
-import dapg.data.alias.product.api.Nm;
+import dapg.data.alias.product.impl.UntypedNmProductConstructor;
 import dapg.data.alias.product.util.valueprovider.AddAliasValue;
 import dapg.data.alias.product.util.valueprovider.AliasValueProvider;
 import dapg.data.alias.product.util.valueprovider.MapAliasValue;
 import dapg.data.alias.product.util.valueprovider.SelectAliasValue;
-import dapg.function.unchecked.Fn3;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
@@ -23,7 +22,7 @@ public abstract class NmProduct {
     // Always length 12 - can be shared between multiple product instances
     protected final AliasKey<?>[] keys;
     // Always length 12 - never shared with other product instances
-    protected final byte[] indices;
+    protected final byte[] indices; // todo replace with independent variables
 
     // todo delete if not needed
     protected NmProduct() {
@@ -43,24 +42,32 @@ public abstract class NmProduct {
         this.indices = indices;
     }
 
-    protected Object untypedValueAtPosition(AliasKey<?> key, int positionInProduct) {
-        byte index = indices[positionInProduct];
+    // todo proper impl
+    protected Object untypedValueAtIndex(AliasKey<?> key, int index) {
+//    protected Object untypedValueAtIndex(AliasKey<?> key, byte indexInValuesArray, int positionInProduct) {
         if (keys[index] != key) {
-            String msg = mismatchedAliasKeyErrorMessage(key, positionInProduct);
+//            String msg = mismatchedAliasKeyErrorMessage(key, positionInProduct); // todo uncomment
+            String msg = mismatchedAliasKeyErrorMessage(key, 123);
             throw new IllegalArgumentException(msg);
         }
         return values[index];
     }
 
+    // todo proper impl
+//    protected abstract byte indexForPosition(int positionInProduct);
+    protected byte indexForPosition(int positionInProduct) {
+        return 0;
+    }
+
     //region Copy helper methods
-    protected Nm untypedCopy(
-            Fn3<Object[], AliasKey<?>[], byte[], Nm> nmInstanceConstructor,
+    protected NmProduct untypedCopy(
+            UntypedNmProductConstructor nmProductConstructor,
             AliasValueProvider<?, ?>... valueProviders
     ) {
         if (copyInPlaceMightBePossible(valueProviders) && optimisticLockingSucceeded(valueProviders)) {
-            return copyInPlace(nmInstanceConstructor, valueProviders);
+            return copyInPlace(nmProductConstructor, valueProviders);
         } else {
-            return copyWithNewValuesArray(nmInstanceConstructor, valueProviders);
+            return copyWithNewArrays(nmProductConstructor, valueProviders);
         }
     }
 
@@ -69,7 +76,8 @@ public abstract class NmProduct {
             AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
             boolean copyInPlaceMightBePossible = switch (valueProvider) {
                 // todo explain
-                case AddAliasValue(_, _), MapAliasValue(_) -> values[currentPosition] == EMPTY_VALUE_SLOT_PLACEHOLDER;
+                case AddAliasValue(_, _),
+                     MapAliasValue(_) -> values[currentPosition] == EMPTY_VALUE_SLOT_PLACEHOLDER;
                 // todo Reads the value
                 case SelectAliasValue(_) -> true;
             };
@@ -85,7 +93,9 @@ public abstract class NmProduct {
             AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
             boolean optimisticLockingSucceeded = switch (valueProvider) {
                 // todo explain
-                case AddAliasValue(_, _), MapAliasValue(_) -> VALUES.compareAndSet(values, currentPosition, EMPTY_VALUE_SLOT_PLACEHOLDER, RESERVED_VALUE_SLOT_PLACEHOLDER);
+                case AddAliasValue(_, _),
+                     MapAliasValue(_) ->
+                            VALUES.compareAndSet(values, currentPosition, EMPTY_VALUE_SLOT_PLACEHOLDER, RESERVED_VALUE_SLOT_PLACEHOLDER);
                 // todo not necessary
                 case SelectAliasValue(_) -> true;
             };
@@ -96,8 +106,8 @@ public abstract class NmProduct {
         return true;
     }
 
-    private Nm copyInPlace(
-            Fn3<Object[], AliasKey<?>[], byte[], Nm> nmInstanceConstructor,
+    private NmProduct copyInPlace(
+            UntypedNmProductConstructor nmProductConstructor,
             AliasValueProvider<?, ?>[] valueProviders
     ) {
         byte[] newIndices = allocateEmptyIndicesArray();
@@ -126,8 +136,8 @@ public abstract class NmProduct {
         return null;
     }
 
-    private Nm copyWithNewValuesArray(
-            Fn3<Object[], AliasKey<?>[], byte[], Nm> nmInstanceConstructor,
+    private NmProduct copyWithNewArrays(
+            UntypedNmProductConstructor nmProductConstructor,
             AliasValueProvider<?, ?>[] valueProviders
     ) {
         // todo proper impl

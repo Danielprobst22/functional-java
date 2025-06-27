@@ -32,6 +32,8 @@ public abstract class Nm extends NmProduct {
     }
 
     //region Copy methods
+
+    //fmt:off
     public static <
           NmInstanceT extends Nm,
           AliasT1 extends Alias<?>,
@@ -40,7 +42,7 @@ public abstract class Nm extends NmProduct {
           NmInstanceT nmInstance,
           AliasValueProvider<NmInstanceT, AliasT1> avp1,
           AliasValueProvider<NmInstanceT, AliasT2> avp2
-    ) {
+    ) { //fmt:on
         //noinspection unchecked
         return (NmTup2<AliasT1, AliasT2>) nmInstance.untypedCopy(NmTup2::new, avp1, avp2);
     }
@@ -49,22 +51,27 @@ public abstract class Nm extends NmProduct {
     //--------------------- AliasValueProvider helper methods ---------------------//
 
     //region SelectAliasValue
+
+    //fmt:off
     public static <
           NmInstanceT extends Nm & Vl1<AliasT1>,
           AliasT1 extends Alias<?>
-    > AliasValueProvider<NmInstanceT, AliasT1> v1() {
+    > AliasValueProvider<NmInstanceT, AliasT1> v1() { //fmt:on
         return new SelectAliasValue<>(POSITION_V1);
     }
 
+    //fmt:off
     public static <
           NmInstanceT extends Nm & Vl2<AliasT2>,
           AliasT2 extends Alias<?>
-    > AliasValueProvider<NmInstanceT, AliasT2> v2() {
+    > AliasValueProvider<NmInstanceT, AliasT2> v2() { //fmt:on
         return new SelectAliasValue<>(POSITION_V2);
     }
     //endregion
 
     //region AddAliasValue
+
+    //fmt:off
     public static <
           NmInstanceT extends Nm,
           AddAliasT extends Alias<AddValueT>,
@@ -72,7 +79,7 @@ public abstract class Nm extends NmProduct {
     > AliasValueProvider<NmInstanceT, AddAliasT> add(
           AliasKey<AddAliasT> key,
           AddValueT value
-    ) {
+    ) { //fmt:on
         return new AddAliasValue<>(key, value);
     }
     //endregion

@@ -11,10 +11,9 @@ public final class NmTup2<
 >
     extends NmProduct2<AliasT1, AliasT2>
 { //fmt:on
-    public static int ARITY = 2;
 
-    // todo make package-private
-    public NmTup2(Object[] values, AliasKey<?>[] keys, byte[] indices) {
-        super(values, keys, indices);
+    // package-private
+    NmTup2(AliasKey<?>[] keys, Object[] values, byte[] indices) {
+        super(keys, values, indices);
     }
 }

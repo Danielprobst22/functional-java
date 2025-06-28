@@ -11,6 +11,7 @@ public record MapAliasValue<
     AliasT extends Alias<?>
 > (
     int positionInProduct
+    // todo proper impl -> add mapping function
 )
     implements AliasValueProvider<NmInstanceT, AliasT>
 { //fmt:on

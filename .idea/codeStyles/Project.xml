@@ -4,6 +4,10 @@
     <option name="FORMATTER_ON_TAG" value="fmt:on" />
     <option name="FORMATTER_OFF_TAG" value="fmt:off" />
     <option name="SOFT_MARGINS" value="120" />
+    <JavaCodeStyleSettings>
+      <option name="SPACE_INSIDE_ONE_LINE_ENUM_BRACES" value="true" />
+      <option name="SPACES_INSIDE_BLOCK_BRACES_WHEN_BODY_IS_PRESENT" value="true" />
+    </JavaCodeStyleSettings>
     <ScalaCodeStyleSettings>
       <option name="MULTILINE_STRING_CLOSING_QUOTES_ON_NEW_LINE" value="true" />
     </ScalaCodeStyleSettings>

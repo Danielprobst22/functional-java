@@ -5,5 +5,5 @@ import dapg.data.alias.product.NmProduct;
 
 @FunctionalInterface
 public interface UntypedNmProductConstructor {
-    NmProduct apply(Object[] values, AliasKey<?>[] keys, byte[] indices);
+    NmProduct apply(AliasKey<?>[] keys, Object[] values, byte[] indices);
 }

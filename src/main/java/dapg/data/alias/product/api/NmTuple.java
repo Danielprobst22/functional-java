@@ -2,14 +2,17 @@ package dapg.data.alias.product.api;
 
 import dapg.data.alias.Alias;
 import dapg.data.alias.AliasKey;
+import dapg.data.alias.product.impl.NmProduct2;
+import dapg.data.alias.product.impl.NmProduct3;
 import dapg.data.alias.product.impl.tuple.NmTup2;
 import dapg.data.alias.product.impl.tuple.NmTup3;
+import dapg.data.alias.product.impl.tuple.NmTupleUtil;
 import dapg.data.alias.product.util.internal.NmUtil;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public final class NmTuple {
+public final class NmTuple { // todo add SelfT and extend Alias<SelfT>
 
     //region Factory methods
     //fmt:off
@@ -20,10 +23,10 @@ public final class NmTuple {
           AliasKey<AliasT1> k1, ValueT1 v1,
           AliasKey<AliasT2> k2, ValueT2 v2
     ) { //fmt:on
-        return new NmTup2<>(
-                NmUtil.preallocateValuesArrayAndPut(v1, v2),
+        return NmTupleUtil.makeNmTup2(
                 NmUtil.preallocateKeysArrayAndPut(k1, k2),
-                NmUtil.preallocateIndicesArrayAndFillForArity(NmTup2.ARITY)
+                NmUtil.preallocateValuesArrayAndPut(v1, v2),
+                NmUtil.defaultIndicesForArity(NmProduct2.ARITY)
         );
     }
 
@@ -37,10 +40,10 @@ public final class NmTuple {
           AliasKey<AliasT2> k2, ValueT2 v2,
           AliasKey<AliasT3> k3, ValueT3 v3
     ) { //fmt:on
-        return new NmTup3<>(
-                NmUtil.preallocateValuesArrayAndPut(v1, v2, v3),
+        return NmTupleUtil.makeNmTup3(
                 NmUtil.preallocateKeysArrayAndPut(k1, k2, k3),
-                NmUtil.preallocateIndicesArrayAndFillForArity(NmTup3.ARITY)
+                NmUtil.preallocateValuesArrayAndPut(v1, v2, v3),
+                NmUtil.defaultIndicesForArity(NmProduct3.ARITY)
         );
     }
     //endregion

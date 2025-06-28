@@ -20,22 +20,57 @@ public abstract class NmProduct3<
                Vl2<AliasT2>,
                Vl3<AliasT3>
 { //fmt:on
-    protected NmProduct3(Object[] values, AliasKey<?>[] keys, byte[] indices) {
-        super(values, keys, indices);
+    public static int ARITY = 3;
+    protected final byte indexV1;
+    protected final byte indexV2;
+    protected final byte indexV3;
+
+    protected NmProduct3(AliasKey<?>[] keys, Object[] values, byte[] indices) {
+        super(keys, values);
+        if (indices.length != ARITY) {
+            String msg = wrongNumberOfIndicesErrorMessage(indices.length);
+            throw new IllegalArgumentException(msg);
+        }
+        indexV1 = indices[POSITION_V1];
+        indexV2 = indices[POSITION_V2];
+        indexV3 = indices[POSITION_V3];
     }
 
     @Override
-    public Object untypedValue1(AliasKey<AliasT1> key) {
-        return untypedValueAtIndex(key, POSITION_V1);
+    protected final byte[] copyIndices() {
+        return makeIndicesArray(indexV1, indexV2, indexV3);
     }
 
     @Override
-    public Object untypedValue2(AliasKey<AliasT2> key) {
-        return untypedValueAtIndex(key, POSITION_V2);
+    protected final byte indexForPosition(int positionInProduct) {
+        return switch (positionInProduct) {
+            case 0 -> indexV1;
+            case 1 -> indexV2;
+            case 2 -> indexV3;
+            default -> {
+                String msg = positionOutOfBoundsErrorMessage(positionInProduct);
+                throw new IllegalArgumentException(msg);
+            }
+        };
     }
 
     @Override
-    public Object untypedValue3(AliasKey<AliasT3> key) {
-        return untypedValueAtIndex(key, POSITION_V3);
+    protected final int arity() {
+        return ARITY;
+    }
+
+    @Override
+    public final Object untypedValue1(AliasKey<AliasT1> key) {
+        return untypedValueAtIndex(key, indexV1, POSITION_V1);
+    }
+
+    @Override
+    public final Object untypedValue2(AliasKey<AliasT2> key) {
+        return untypedValueAtIndex(key, indexV2, POSITION_V2);
+    }
+
+    @Override
+    public final Object untypedValue3(AliasKey<AliasT3> key) {
+        return untypedValueAtIndex(key, indexV3, POSITION_V3);
     }
 }

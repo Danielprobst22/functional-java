@@ -8,19 +8,20 @@ import dapg.data.alias.product.impl.NmProduct2;
 
 //fmt:off
 public abstract class NmStruct2<
+    // todo add SelfT
     AliasT1 extends Alias<?>,
     AliasT2 extends Alias<?>
 >
     extends NmProduct2<AliasT1, AliasT2>
-    implements NmStruct<NmStruct2<AliasT1, AliasT2>>
+    implements NmStruct<NmStruct2<AliasT1, AliasT2>> // todo pass SelfT
 { //fmt:on
 
-    protected NmStruct2(Object[] values, AliasKey<?>[] keys, byte[] indices) {
-        super(values, keys, indices);
+    protected NmStruct2(AliasKey<?>[] keys, Object[] values, byte[] indices) {
+        super(keys, values, indices);
     }
 
     @Override
-    public Nm asNmInstance() {
+    public final Nm asNmInstance() {
         return this;
     }
 }

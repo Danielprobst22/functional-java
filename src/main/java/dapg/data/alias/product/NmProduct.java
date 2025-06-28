@@ -9,55 +9,37 @@ import dapg.data.alias.product.util.valueprovider.SelectAliasValue;
 
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
-import java.util.Arrays;
 
 import static dapg.data.alias.product.util.internal.NmUtil.*;
 
-// todo make sealed
 public abstract class NmProduct {
     // Atomicity follows same design/implementation of AtomicReferenceArray#compareAndSet
-    private static final VarHandle VALUES = MethodHandles.arrayElementVarHandle(Object[].class);
-    // Always length 12 - can be shared between multiple product instances
-    protected final Object[] values;
+    private static final VarHandle KEYS = MethodHandles.arrayElementVarHandle(AliasKey[].class);
     // Always length 12 - can be shared between multiple product instances
     protected final AliasKey<?>[] keys;
-    // Always length 12 - never shared with other product instances
-    protected final byte[] indices; // todo replace with independent variables
+    // Always length 12 - can be shared between multiple product instances
+    protected final Object[] values;
 
-    // todo delete if not needed
-    protected NmProduct() {
-        values = new Object[MAX_ARITY];
-        Arrays.fill(values, EMPTY_VALUE_SLOT_PLACEHOLDER);
-
-        keys = new AliasKey<?>[MAX_ARITY];
-        Arrays.fill(keys, null); // todo proper impl
-
-        indices = new byte[MAX_ARITY];
-        Arrays.fill(indices, EMPTY_INDEX_SLOT_PLACEHOLDER);
-    }
-
-    protected NmProduct(Object[] values, AliasKey<?>[] keys, byte[] indices) {
-        this.values = values;
+    protected NmProduct(AliasKey<?>[] keys, Object[] values) {
         this.keys = keys;
-        this.indices = indices;
+        this.values = values;
     }
 
-    // todo proper impl
-    protected Object untypedValueAtIndex(AliasKey<?> key, int index) {
-//    protected Object untypedValueAtIndex(AliasKey<?> key, byte indexInValuesArray, int positionInProduct) {
+    protected Object untypedValueAtIndex(
+            AliasKey<?> key,
+            byte index,
+            int positionInProductForErrorReporting
+    ) {
         if (keys[index] != key) {
-//            String msg = mismatchedAliasKeyErrorMessage(key, positionInProduct); // todo uncomment
-            String msg = mismatchedAliasKeyErrorMessage(key, 123);
+            String msg = mismatchedAliasKeyErrorMessage(key, keys[index], values[index], positionInProductForErrorReporting);
             throw new IllegalArgumentException(msg);
         }
         return values[index];
     }
 
-    // todo proper impl
-//    protected abstract byte indexForPosition(int positionInProduct);
-    protected byte indexForPosition(int positionInProduct) {
-        return 0;
-    }
+    protected abstract byte indexForPosition(int positionInProduct);
+
+    protected abstract int arity();
 
     //region Copy helper methods
     protected NmProduct untypedCopy(
@@ -72,13 +54,13 @@ public abstract class NmProduct {
     }
 
     private boolean copyInPlaceMightBePossible(AliasValueProvider<?, ?>[] valueProviders) {
-        for (int currentPosition = 0; currentPosition < valueProviders.length; currentPosition++) {
-            AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
+        for (int position = 0; position < valueProviders.length; position++) {
+            AliasValueProvider<?, ?> valueProvider = valueProviders[position];
             boolean copyInPlaceMightBePossible = switch (valueProvider) {
-                // todo explain
+                // New elements are only added in place if the index matching their position is still empty
                 case AddAliasValue(_, _),
-                     MapAliasValue(_) -> values[currentPosition] == EMPTY_VALUE_SLOT_PLACEHOLDER;
-                // todo Reads the value
+                     MapAliasValue(_) -> keys[position] == EMPTY_KEY_SLOT_PLACEHOLDER;
+                // Reads already present value, no mutation necessary
                 case SelectAliasValue(_) -> true;
             };
             if (!copyInPlaceMightBePossible) {
@@ -89,14 +71,13 @@ public abstract class NmProduct {
     }
 
     private boolean optimisticLockingSucceeded(AliasValueProvider<?, ?>[] valueProviders) {
-        for (int currentPosition = 0; currentPosition < valueProviders.length; currentPosition++) {
-            AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
+        for (int position = 0; position < valueProviders.length; position++) {
+            AliasValueProvider<?, ?> valueProvider = valueProviders[position];
             boolean optimisticLockingSucceeded = switch (valueProvider) {
-                // todo explain
+                // Performs atomic 'compareAndSet' to reserve the position in the 'keys' array
                 case AddAliasValue(_, _),
-                     MapAliasValue(_) ->
-                            VALUES.compareAndSet(values, currentPosition, EMPTY_VALUE_SLOT_PLACEHOLDER, RESERVED_VALUE_SLOT_PLACEHOLDER);
-                // todo not necessary
+                     MapAliasValue(_) -> KEYS.compareAndSet(keys, position, EMPTY_KEY_SLOT_PLACEHOLDER, RESERVED_KEY_SLOT_PLACEHOLDER);
+                // Reads already present value, no mutation necessary
                 case SelectAliasValue(_) -> true;
             };
             if (!optimisticLockingSucceeded) {
@@ -110,63 +91,122 @@ public abstract class NmProduct {
             UntypedNmProductConstructor nmProductConstructor,
             AliasValueProvider<?, ?>[] valueProviders
     ) {
-        byte[] newIndices = allocateEmptyIndicesArray();
-        for (int currentPosition = 0; currentPosition < valueProviders.length; currentPosition++) {
-            AliasValueProvider<?, ?> valueProvider = valueProviders[currentPosition];
+        byte[] newIndices = emptyIndicesForArity(valueProviders.length);
+
+        for (int newPosition = 0; newPosition < valueProviders.length; newPosition++) {
+            AliasValueProvider<?, ?> valueProvider = valueProviders[newPosition];
+
             switch (valueProvider) {
                 case AddAliasValue(AliasKey<?> key, Object value) -> {
-                    boolean optimisticLockingUpheld = VALUES.compareAndSet(values, currentPosition, RESERVED_VALUE_SLOT_PLACEHOLDER, value);
+                    boolean optimisticLockingUpheld = KEYS.compareAndSet(keys, newPosition, RESERVED_KEY_SLOT_PLACEHOLDER, key);
                     if (!optimisticLockingUpheld) {
-                        throw new IllegalStateException(optimisticLockingNotUpheldErrorMessage(currentPosition));
+                        String msg = optimisticLockingNotUpheldErrorMessage(newPosition);
+                        throw new IllegalStateException(msg);
                     }
-                    keys[currentPosition] = key;
-                    newIndices[currentPosition] = (byte) currentPosition;
+                    values[newPosition] = value;
+                    newIndices[newPosition] = (byte) newPosition;
                 }
                 case MapAliasValue(int positionInProduct) -> {
-                    // todo proper impl
-                    newIndices[currentPosition] = (byte) currentPosition;
+                    byte originalIndex = indexForPosition(positionInProduct);
+                    AliasKey<?> keyToMap = keys[originalIndex];
+                    Object valueToMap = values[originalIndex];
+
+                    boolean optimisticLockingUpheld = KEYS.compareAndSet(keys, newPosition, RESERVED_KEY_SLOT_PLACEHOLDER, keyToMap); // todo use mapped key
+                    if (!optimisticLockingUpheld) {
+                        String msg = optimisticLockingNotUpheldErrorMessage(newPosition);
+                        throw new IllegalStateException(msg);
+                    }
+                    values[newPosition] = valueToMap; // todo proper impl -> call mapping function
+                    newIndices[newPosition] = (byte) newPosition;
                 }
                 case SelectAliasValue(int positionInProduct) -> {
-                    // todo proper impl
-                    newIndices[currentPosition] = (byte) currentPosition;
+                    // Sets the index at 'newPosition' to reference a value already present in the 'values' array
+                    // -> 'keys' and 'values' arrays at 'newPosition' remain empty (or might even already be occupied)
+                    // -> could be populated in a later/separate call to 'untypedCopy' where a new value might actually have to be written
+                    newIndices[newPosition] = indexForPosition(positionInProduct);
                 }
             }
         }
-        // todo proper impl
-        return null;
+
+        return nmProductConstructor.apply(keys, values, newIndices);
     }
 
     private NmProduct copyWithNewArrays(
             UntypedNmProductConstructor nmProductConstructor,
             AliasValueProvider<?, ?>[] valueProviders
     ) {
-        // todo proper impl
-        return null;
+        AliasKey<?>[] newKeys = allocateEmptyKeysArray();
+        Object[] newValues = allocateEmptyValuesArray();
+        byte[] newIndices = defaultIndicesForArity(valueProviders.length); // already correctly populated -> no need to be overwritten
+
+        for (int newPosition = 0; newPosition < valueProviders.length; newPosition++) {
+            AliasValueProvider<?, ?> valueProvider = valueProviders[newPosition];
+
+            switch (valueProvider) {
+                case AddAliasValue(AliasKey<?> key, Object value) -> {
+                    newKeys[newPosition] = key;
+                    newValues[newPosition] = value;
+                }
+                case MapAliasValue(int positionInProduct) -> {
+                    byte originalIndex = indexForPosition(positionInProduct);
+                    AliasKey<?> keyToMap = keys[originalIndex];
+                    Object valueToMap = values[originalIndex];
+
+                    newKeys[newPosition] = keyToMap; // todo use mapped key
+                    newValues[newPosition] = valueToMap; // todo proper impl -> call mapping function
+                }
+                case SelectAliasValue(int positionInProduct) -> {
+                    byte originalIndex = indexForPosition(positionInProduct);
+                    AliasKey<?> selectedKey = keys[originalIndex];
+                    Object selectedValue = values[originalIndex];
+
+                    newKeys[newPosition] = selectedKey;
+                    newValues[newPosition] = selectedValue;
+                }
+            }
+        }
+
+        return nmProductConstructor.apply(newKeys, newValues, newIndices);
     }
     //endregion
 
     //region Error helper methods
+    protected final String wrongNumberOfIndicesErrorMessage(int providedIndicesLength) {
+        String classOfProduct = this.getClass().getSimpleName();
+        return String.format(
+                "NmProduct='%s' cannot be instantiated with indices array with length=%d - length must be equal to arity=%d",
+                classOfProduct, providedIndicesLength, arity()
+        );
+    }
+
+    protected final String positionOutOfBoundsErrorMessage(int positionInProduct) {
+        String classOfProduct = this.getClass().getSimpleName();
+        return String.format(
+                "Position=%d is out of bounds for NmProduct='%s' with arity=%d",
+                displayPosition(positionInProduct), classOfProduct, arity()
+        );
+    }
+
     private String mismatchedAliasKeyErrorMessage(
             AliasKey<?> providedKey,
+            AliasKey<?> actualKey,
+            Object value,
             int positionInProduct
     ) {
-        byte index = indices[positionInProduct];
-        AliasKey<?> actualKey = keys[index];
-        Object value = values[index];
         String classOfProduct = this.getClass().getSimpleName();
         return String.format(
                 "Provided AliasKey='%s' does not match AliasKey='%s' for value='%s' at position=%d of NmProduct='%s'",
-                providedKey.displayName(), actualKey.displayName(), value, positionInProduct, classOfProduct
+                providedKey.displayName(), actualKey.displayName(), value, displayPosition(positionInProduct), classOfProduct
         );
     }
 
     private String optimisticLockingNotUpheldErrorMessage(int positionInProduct) {
         String classOfProduct = this.getClass().getSimpleName();
-        Object value = values[positionInProduct];
+        AliasKey<?> conflictingKey = keys[positionInProduct];
         return String.format(
                 "Copying NmProduct='%s' failed - optimistic locking was not upheld: " +
-                        "value='%s' at position=%d did not match expected constant='RESERVED_VALUE_SLOT_PLACEHOLDER'",
-                classOfProduct, value, positionInProduct
+                        "key='%s' at position=%d did not match expected constant='%s'",
+                classOfProduct, conflictingKey.displayName(), displayPosition(positionInProduct), RESERVED_KEY_SLOT_PLACEHOLDER.displayName()
         );
     }
     //endregion

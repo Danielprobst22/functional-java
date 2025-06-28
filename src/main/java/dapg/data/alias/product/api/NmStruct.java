@@ -15,21 +15,6 @@ public interface NmStruct<
             Alias<SelfT>
 { //fmt:on
 
-    //region Factory methods
-
-    //fmt:off
-    static <
-          ResultT extends Nm & NmStruct<NmStruct2<AliasT1, AliasT2>>,
-          AliasT1 extends Alias<?>,
-          AliasT2 extends Alias<?>
-    > ResultT make(
-          NmStruct2Constructor<ResultT, AliasT1, AliasT2> constructor,
-          NmTup2<AliasT1, AliasT2> tup2
-    ) { //fmt:on
-        return constructor.apply(tup2.values(), tup2.keys(), tup2.indices());
-    }
-    //endregion
-
     @Override
     default Object untypedFetch(AliasKey<?> key) {
         Nm self = asNmInstance();
@@ -43,4 +28,19 @@ public interface NmStruct<
     }
 
     Nm asNmInstance();
+
+    //region Factory methods
+
+    //fmt:off
+    static <
+          ResultT extends Nm & NmStruct<NmStruct2<AliasT1, AliasT2>>,
+          AliasT1 extends Alias<?>,
+          AliasT2 extends Alias<?>
+    > ResultT make(
+          NmStruct2Constructor<ResultT, AliasT1, AliasT2> constructor,
+          NmTup2<AliasT1, AliasT2> tup2
+    ) { //fmt:on
+        return constructor.apply(tup2.keys(), tup2.values(), ((Nm) tup2).copyIndices());
+    }
+    //endregion
 }

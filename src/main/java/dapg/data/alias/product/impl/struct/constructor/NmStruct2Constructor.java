@@ -14,5 +14,5 @@ public interface NmStruct2Constructor<
     AliasT2 extends Alias<?>
 > { //fmt:on
 
-    ResultT apply(Object[] values, AliasKey<?>[] keys, byte[] indices);
+    ResultT apply(AliasKey<?>[] keys, Object[] values, byte[] indices);
 }

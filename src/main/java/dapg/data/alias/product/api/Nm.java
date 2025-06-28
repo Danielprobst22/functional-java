@@ -4,32 +4,32 @@ import dapg.data.alias.Alias;
 import dapg.data.alias.AliasKey;
 import dapg.data.alias.product.NmProduct;
 import dapg.data.alias.product.impl.tuple.NmTup2;
+import dapg.data.alias.product.impl.tuple.NmTup3;
+import dapg.data.alias.product.impl.tuple.NmTupleUtil;
 import dapg.data.alias.product.util.valueprovider.AddAliasValue;
 import dapg.data.alias.product.util.valueprovider.AliasValueProvider;
 import dapg.data.alias.product.util.valueprovider.SelectAliasValue;
 import dapg.data.alias.value.indexed.Vl1;
 import dapg.data.alias.value.indexed.Vl2;
+import dapg.data.alias.value.indexed.Vl3;
 
-import static dapg.data.alias.product.util.internal.NmUtil.POSITION_V1;
-import static dapg.data.alias.product.util.internal.NmUtil.POSITION_V2;
+import static dapg.data.alias.product.util.internal.NmUtil.*;
 
 public abstract class Nm extends NmProduct {
 
-    protected Nm(Object[] values, AliasKey<?>[] keys, byte[] indices) {
-        super(values, keys, indices);
+    protected Nm(AliasKey<?>[] keys, Object[] values) {
+        super(keys, values);
     }
 
-    protected Object[] values() {
-        return values;
-    }
-
-    protected AliasKey<?>[] keys() {
+    protected final AliasKey<?>[] keys() {
         return keys;
     }
 
-    protected byte[] indices() {
-        return indices;
+    protected final Object[] values() {
+        return values;
     }
+
+    protected abstract byte[] copyIndices();
 
     //region Copy methods
 
@@ -44,7 +44,23 @@ public abstract class Nm extends NmProduct {
           AliasValueProvider<NmInstanceT, AliasT2> avp2
     ) { //fmt:on
         //noinspection unchecked
-        return (NmTup2<AliasT1, AliasT2>) nmInstance.untypedCopy(NmTup2::new, avp1, avp2);
+        return (NmTup2<AliasT1, AliasT2>) nmInstance.untypedCopy(NmTupleUtil::makeNmTup2, avp1, avp2);
+    }
+
+    //fmt:off
+    public static <
+          NmInstanceT extends Nm,
+          AliasT1 extends Alias<?>,
+          AliasT2 extends Alias<?>,
+          AliasT3 extends Alias<?>
+    > NmTup3<AliasT1, AliasT2, AliasT3> copy(
+          NmInstanceT nmInstance,
+          AliasValueProvider<NmInstanceT, AliasT1> avp1,
+          AliasValueProvider<NmInstanceT, AliasT2> avp2,
+          AliasValueProvider<NmInstanceT, AliasT3> avp3
+    ) { //fmt:on
+        //noinspection unchecked
+        return (NmTup3<AliasT1, AliasT2, AliasT3>) nmInstance.untypedCopy(NmTupleUtil::makeNmTup3, avp1, avp2, avp3);
     }
     //endregion
 
@@ -66,6 +82,14 @@ public abstract class Nm extends NmProduct {
           AliasT2 extends Alias<?>
     > AliasValueProvider<NmInstanceT, AliasT2> v2() { //fmt:on
         return new SelectAliasValue<>(POSITION_V2);
+    }
+
+    //fmt:off
+    public static <
+          NmInstanceT extends Nm & Vl3<AliasT3>,
+          AliasT3 extends Alias<?>
+    > AliasValueProvider<NmInstanceT, AliasT3> v3() { //fmt:on
+        return new SelectAliasValue<>(POSITION_V3);
     }
     //endregion
 

@@ -5,6 +5,8 @@ import dapg.data.alias.AliasWithStructAccessor;
 import dapg.data.alias.product.api.Nm;
 import dapg.data.alias.product.api.NmStruct;
 import dapg.data.alias.product.api.NmTuple;
+import dapg.data.alias.product.api.markertraits.nm.Nm2;
+import dapg.data.alias.product.api.markertraits.nm.Nm3;
 import dapg.data.alias.product.impl.struct.NmStruct2;
 import dapg.data.alias.product.impl.struct.NmStructAccessor;
 import dapg.data.alias.product.impl.struct.constructor.NmStruct2Constructor;
@@ -13,6 +15,7 @@ import dapg.data.alias.product.impl.tuple.NmTup3;
 import dapg.data.alias.value.free.Vl;
 import dapg.data.alias.value.indexed.Vl1;
 import dapg.data.alias.value.indexed.Vl2;
+import dapg.data.alias.value.indexed.Vl3;
 import org.junit.jupiter.api.Test;
 
 import static dapg.data.alias.product.api.Nm.*;
@@ -38,6 +41,13 @@ class AliasAndTupleStuffTest {
 
         NmTup3<BazId, FooId, BarId> bazFooBar = copy(fooBar, add(BazId.K, 37), v1(), v2());
         useFooBarBazValues(bazFooBar.v2ToVl(), bazFooBar.v3ToVl(), bazFooBar.v1ToVl());
+
+        useFooBarNm2(fooBar);
+        useFooBarNm2(fooBarBaz);
+        useFooBarBazNm3(fooBarBaz);
+
+        System.out.println("NmTup2 arity: " + fooBar.arity());
+        System.out.println("NmTup3 arity: " + fooBarBaz.arity());
     }
 
     @Test
@@ -48,11 +58,14 @@ class AliasAndTupleStuffTest {
         useBarVl2(fooBar);
         useFooBarTuple(fooBar);
 
+        useFooBarNm2(fooBar);
         useFooBarValues(fooBar.v1ToVl(), fooBar.v2ToVl());
 
         useHasFoo(fooBar);
         useHasBar(fooBar);
         useFooBarStruct(fooBar);
+
+        System.out.println("NmStruct2 arity: " + fooBar.arity());
     }
 
     private void useFooVl1(Vl1<FooId> foo) {
@@ -73,6 +86,25 @@ class AliasAndTupleStuffTest {
 
         String barValue = Vl2.v(BarId.K, fooBar);
         System.out.println("Bar value Vl1 & Vl2: " + barValue);
+    }
+
+    private void useFooBarNm2(Nm2<FooId, BarId> fooBar) {
+        long fooValue = Vl1.v(FooId.K, fooBar);
+        System.out.println("Foo value Nm2: " + fooValue);
+
+        String barValue = Vl2.v(BarId.K, fooBar);
+        System.out.println("Bar value Nm2: " + barValue);
+    }
+
+    private void useFooBarBazNm3(Nm3<FooId, BarId, BazId> fooBarBaz) {
+        long fooValue = Vl1.v(FooId.K, fooBarBaz);
+        System.out.println("Foo value Nm3: " + fooValue);
+
+        String barValue = Vl2.v(BarId.K, fooBarBaz);
+        System.out.println("Bar value Nm3: " + barValue);
+
+        int bazValue = Vl3.v(BazId.K, fooBarBaz);
+        System.out.println("Baz value Nm3: " + bazValue);
     }
 
     private void useFooBarValues(Vl<FooId> foo, Vl<BarId> bar) {
@@ -134,7 +166,7 @@ class AliasAndTupleStuffTest {
         private enum BazIdKey implements AliasKey<BazId> { INSTANCE }
     }
     public interface HasBazId extends NmStructAccessor {
-        default int barId() { return NmStructAccessor.v(BazId.K, this); }
+        default int bazId() { return NmStructAccessor.v(BazId.K, this); }
     }
 
 

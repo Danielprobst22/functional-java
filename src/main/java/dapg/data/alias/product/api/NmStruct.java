@@ -27,6 +27,7 @@ public interface NmStruct<
         throw new IllegalArgumentException(); // todo proper impl -> add error helper method to NmProd
     }
 
+    // todo move to Named if possible
     Nm asNmInstance();
 
     //region Factory methods

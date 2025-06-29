@@ -2,8 +2,8 @@ package dapg.data.alias.product.api;
 
 import dapg.data.alias.Alias;
 import dapg.data.alias.AliasKey;
-import dapg.data.alias.product.impl.NmProduct2;
-import dapg.data.alias.product.impl.NmProduct3;
+import dapg.data.alias.product.api.markertraits.nm.Nm2;
+import dapg.data.alias.product.api.markertraits.nm.Nm3;
 import dapg.data.alias.product.impl.tuple.NmTup2;
 import dapg.data.alias.product.impl.tuple.NmTup3;
 import dapg.data.alias.product.impl.tuple.NmTupleUtil;
@@ -26,7 +26,7 @@ public final class NmTuple { // todo add SelfT and extend Alias<SelfT>
         return NmTupleUtil.makeNmTup2(
                 NmUtil.preallocateKeysArrayAndPut(k1, k2),
                 NmUtil.preallocateValuesArrayAndPut(v1, v2),
-                NmUtil.defaultIndicesForArity(NmProduct2.ARITY)
+                NmUtil.defaultIndicesForArity(Nm2.ARITY)
         );
     }
 
@@ -43,7 +43,7 @@ public final class NmTuple { // todo add SelfT and extend Alias<SelfT>
         return NmTupleUtil.makeNmTup3(
                 NmUtil.preallocateKeysArrayAndPut(k1, k2, k3),
                 NmUtil.preallocateValuesArrayAndPut(v1, v2, v3),
-                NmUtil.defaultIndicesForArity(NmProduct3.ARITY)
+                NmUtil.defaultIndicesForArity(Nm3.ARITY)
         );
     }
     //endregion

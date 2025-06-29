@@ -3,9 +3,7 @@ package dapg.data.alias.product.impl;
 import dapg.data.alias.Alias;
 import dapg.data.alias.AliasKey;
 import dapg.data.alias.product.api.Nm;
-import dapg.data.alias.value.indexed.Vl1;
-import dapg.data.alias.value.indexed.Vl2;
-import dapg.data.alias.value.indexed.Vl3;
+import dapg.data.alias.product.api.markertraits.nm.Nm3;
 
 import static dapg.data.alias.product.util.internal.NmUtil.*;
 
@@ -16,18 +14,15 @@ public abstract class NmProduct3<
     AliasT3 extends Alias<?>
 >
     extends Nm
-    implements Vl1<AliasT1>,
-               Vl2<AliasT2>,
-               Vl3<AliasT3>
+    implements Nm3<AliasT1, AliasT2, AliasT3>
 { //fmt:on
-    public static int ARITY = 3;
     protected final byte indexV1;
     protected final byte indexV2;
     protected final byte indexV3;
 
     protected NmProduct3(AliasKey<?>[] keys, Object[] values, byte[] indices) {
         super(keys, values);
-        if (indices.length != ARITY) {
+        if (indices.length != arity()) {
             String msg = wrongNumberOfIndicesErrorMessage(indices.length);
             throw new IllegalArgumentException(msg);
         }
@@ -52,11 +47,6 @@ public abstract class NmProduct3<
                 throw new IllegalArgumentException(msg);
             }
         };
-    }
-
-    @Override
-    protected final int arity() {
-        return ARITY;
     }
 
     @Override

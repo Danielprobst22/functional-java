@@ -12,7 +12,7 @@ import java.lang.invoke.VarHandle;
 
 import static dapg.data.alias.product.util.internal.NmUtil.*;
 
-public abstract class NmProduct {
+public abstract class NmProduct implements Named {
     // Atomicity follows same design/implementation of AtomicReferenceArray#compareAndSet
     private static final VarHandle KEYS = MethodHandles.arrayElementVarHandle(AliasKey[].class);
     // Always length 12 - can be shared between multiple product instances
@@ -38,8 +38,6 @@ public abstract class NmProduct {
     }
 
     protected abstract byte indexForPosition(int positionInProduct);
-
-    protected abstract int arity();
 
     //region Copy helper methods
     protected NmProduct untypedCopy(

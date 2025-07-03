@@ -1,25 +1,25 @@
 package dapg.data;
 
-import dapg.data.alias.AliasKey;
-import dapg.data.alias.product.api.addons.alias.AliasWithStructAccessor;
-import dapg.data.alias.product.api.Nm;
-import dapg.data.alias.product.api.NmStruct;
-import dapg.data.alias.product.api.NmTuple;
-import dapg.data.alias.product.api.addons.key.AliasKeyWithFactory;
-import dapg.data.alias.product.api.markertraits.nm.Nm2;
-import dapg.data.alias.product.api.markertraits.nm.Nm3;
-import dapg.data.alias.product.impl.struct.NmStruct2;
-import dapg.data.alias.product.impl.struct.NmStructAccessor;
-import dapg.data.alias.product.impl.struct.constructor.NmStruct2Constructor;
-import dapg.data.alias.product.impl.tuple.NmTup2;
-import dapg.data.alias.product.impl.tuple.NmTup3;
-import dapg.data.alias.value.free.Vl;
-import dapg.data.alias.value.indexed.Vl1;
-import dapg.data.alias.value.indexed.Vl2;
-import dapg.data.alias.value.indexed.Vl3;
+import dapg.data.named.AliasKey;
+import dapg.data.named.product.api.addons.alias.AliasWithStructAccessor;
+import dapg.data.named.product.api.Nm;
+import dapg.data.named.product.api.NmStruct;
+import dapg.data.named.product.api.NmTuple;
+import dapg.data.named.product.api.addons.key.AliasKeyWithFactory;
+import dapg.data.named.product.api.markertraits.nm.Nm2;
+import dapg.data.named.product.api.markertraits.nm.Nm3;
+import dapg.data.named.product.impl.struct.NmStruct2;
+import dapg.data.named.product.impl.struct.NmStructAccessor;
+import dapg.data.named.product.impl.struct.constructor.NmStruct2Constructor;
+import dapg.data.named.product.impl.tuple.NmTup2;
+import dapg.data.named.product.impl.tuple.NmTup3;
+import dapg.data.named.value.free.Vl;
+import dapg.data.named.value.indexed.Vl1;
+import dapg.data.named.value.indexed.Vl2;
+import dapg.data.named.value.indexed.Vl3;
 import org.junit.jupiter.api.Test;
 
-import static dapg.data.alias.product.api.Nm.*;
+import static dapg.data.named.product.api.Nm.*;
 
 class AliasAndTupleStuffTest {
 

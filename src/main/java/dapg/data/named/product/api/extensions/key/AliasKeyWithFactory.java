@@ -1,7 +1,7 @@
-package dapg.data.named.product.api.addons.key;
+package dapg.data.named.product.api.extensions.key;
 
 import dapg.data.named.Alias;
-import dapg.data.named.product.api.addons.key.internal.AliasKeyWithValueAccessors;
+import dapg.data.named.product.api.extensions.key.internal.AliasKeyWithValueAccessors;
 import dapg.data.named.value.free.Vl;
 
 //fmt:off

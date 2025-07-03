@@ -1,4 +1,4 @@
-package dapg.data.named.product.api.addons.alias;
+package dapg.data.named.product.api.extensions.alias;
 
 import dapg.data.named.Alias;
 import dapg.data.named.product.impl.struct.NmStructAccessor;

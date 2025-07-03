@@ -1,11 +1,11 @@
-package dapg.data.named.product.api.addons.key;
+package dapg.data.named.product.api.extensions.key;
 
 import dapg.control.option.None;
 import dapg.control.option.Option;
 import dapg.control.option.Some;
 import dapg.control.result.Result;
 import dapg.data.named.Alias;
-import dapg.data.named.product.api.addons.key.internal.AliasKeyWithValueAccessors;
+import dapg.data.named.product.api.extensions.key.internal.AliasKeyWithValueAccessors;
 import dapg.data.named.value.free.Vl;
 
 //fmt:off

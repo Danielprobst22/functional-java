@@ -1,11 +1,11 @@
 package dapg.data;
 
 import dapg.data.named.AliasKey;
-import dapg.data.named.product.api.addons.alias.AliasWithStructAccessor;
 import dapg.data.named.product.api.Nm;
 import dapg.data.named.product.api.NmStruct;
 import dapg.data.named.product.api.NmTuple;
-import dapg.data.named.product.api.addons.key.AliasKeyWithFactory;
+import dapg.data.named.product.api.extensions.alias.AliasWithStructAccessor;
+import dapg.data.named.product.api.extensions.key.AliasKeyWithFactory;
 import dapg.data.named.product.api.markertraits.nm.Nm2;
 import dapg.data.named.product.api.markertraits.nm.Nm3;
 import dapg.data.named.product.impl.struct.NmStruct2;

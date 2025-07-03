@@ -1,4 +1,4 @@
-package dapg.data.named.product.api.addons.key.internal;
+package dapg.data.named.product.api.extensions.key.internal;
 
 import dapg.data.named.Alias;
 import dapg.data.named.AliasKey;

@@ -1,7 +1,7 @@
 package dapg.data.named.product.impl.struct;
 
 import dapg.data.named.AliasKey;
-import dapg.data.named.product.api.addons.alias.AliasWithStructAccessor;
+import dapg.data.named.product.api.extensions.alias.AliasWithStructAccessor;
 
 public interface NmStructAccessor {
 

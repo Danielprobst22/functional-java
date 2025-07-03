@@ -18,6 +18,12 @@ public record Err<T, E>(@NonNull E err) implements Result<T, E> {
     }
 
     @Override
+    public <TT> Result<TT, E> map(@NonNull Function<T, TT> map) {
+        //noinspection unchecked
+        return (Result<TT, E>) this;
+    }
+
+    @Override
     public <EE> Result<T, EE> mapErr(@NonNull Function<E, EE> mapErr) {
         return new Err<>(mapErr.apply(err));
     }

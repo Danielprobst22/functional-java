@@ -14,6 +14,11 @@ import java.util.function.Supplier;
 
 public sealed interface Result<T, E> extends Serializable permits Ok, Err {
 
+    static <E> Result<Void, E> voidOk() {
+        //noinspection unchecked
+        return (Result<Void, E>) (Result<?, E>) new Ok<>(Ok.VoidPlaceholder.INSTANCE); // todo proper impl
+    }
+
     static <T, E> Result<T, E> ok(@NonNull T value) {
         return new Ok<>(value);
     }
@@ -71,6 +76,8 @@ public sealed interface Result<T, E> extends Serializable permits Ok, Err {
     boolean isOk();
 
     boolean isErr();
+
+    <TT> Result<TT, E> map(@NonNull Function<T, TT> map);
 
     <EE> Result<T, EE> mapErr(@NonNull Function<E, EE> mapErr);
 

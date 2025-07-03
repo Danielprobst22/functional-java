@@ -6,6 +6,7 @@ import lombok.NonNull;
 import java.util.function.Function;
 
 public record Ok<T, E>(@NonNull T value) implements Result<T, E> {
+    protected enum VoidPlaceholder { INSTANCE }
 
     @Override
     public boolean isOk() {
@@ -15,6 +16,11 @@ public record Ok<T, E>(@NonNull T value) implements Result<T, E> {
     @Override
     public boolean isErr() {
         return false;
+    }
+
+    @Override
+    public <TT> Result<TT, E> map(@NonNull Function<T, TT> map) {
+        return new Ok<>(map.apply(value));
     }
 
     @Override

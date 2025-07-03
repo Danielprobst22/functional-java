@@ -1,10 +1,11 @@
 package dapg.data;
 
 import dapg.data.alias.AliasKey;
-import dapg.data.alias.AliasWithStructAccessor;
+import dapg.data.alias.product.api.addons.alias.AliasWithStructAccessor;
 import dapg.data.alias.product.api.Nm;
 import dapg.data.alias.product.api.NmStruct;
 import dapg.data.alias.product.api.NmTuple;
+import dapg.data.alias.product.api.addons.key.AliasKeyWithFactory;
 import dapg.data.alias.product.api.markertraits.nm.Nm2;
 import dapg.data.alias.product.api.markertraits.nm.Nm3;
 import dapg.data.alias.product.impl.struct.NmStruct2;
@@ -26,12 +27,21 @@ class AliasAndTupleStuffTest {
 
     @Test
     void test() {
+        useFooBarValues(FooId.K.make(42L), BarId.K.make("bar-37"));
+        useFooBarValuesExtensionMethods(FooId.K.make(42L), BarId.K.make("bar-37"));
+    }
+
+    @Test
+    void test2() {
         NmTup2<FooId, BarId> fooBar = NmTuple.of(FooId.K, 42L, BarId.K, "bar-37");
 
         useFooVl1(fooBar);
         useBarVl2(fooBar);
         useFooBarTuple(fooBar);
         useFooBarValues(fooBar.v1ToVl(), fooBar.v2ToVl());
+
+        useFooBarValuesExtensionMethods(fooBar.v1ToVl(), fooBar.v2ToVl());
+        useFooBarNm2WithExtensionMethods(fooBar);
 
         NmTup2<BarId, FooId> barFoo = Nm.copy(fooBar, v2(), v1());
         useFooBarValues(barFoo.v2ToVl(), barFoo.v1ToVl());
@@ -51,7 +61,7 @@ class AliasAndTupleStuffTest {
     }
 
     @Test
-    void test2() {
+    void test3() {
         FooBar fooBar = NmStruct.make(FooBar.C, NmTuple.of(FooId.K, 42L, BarId.K, "bar-37"));
 
         useFooVl1(fooBar);
@@ -96,6 +106,14 @@ class AliasAndTupleStuffTest {
         System.out.println("Bar value Nm2: " + barValue);
     }
 
+    private void useFooBarNm2WithExtensionMethods(Nm2<FooId, BarId> fooBar) {
+        long fooValue = FooId.K.v1(fooBar);
+        System.out.println("Foo value Nm2 ext: " + fooValue);
+
+        String barValue = BarId.K.v2(fooBar);
+        System.out.println("Bar value Nm2 ext: " + barValue);
+    }
+
     private void useFooBarBazNm3(Nm3<FooId, BarId, BazId> fooBarBaz) {
         long fooValue = Vl1.v(FooId.K, fooBarBaz);
         System.out.println("Foo value Nm3: " + fooValue);
@@ -113,6 +131,14 @@ class AliasAndTupleStuffTest {
 
         String barValue = Vl.v(BarId.K, bar);
         System.out.println("Bar value Vl: " + barValue);
+    }
+
+    private void useFooBarValuesExtensionMethods(Vl<FooId> foo, Vl<BarId> bar) {
+        long fooValue = FooId.K.vl(foo);
+        System.out.println("Foo value Vl ext: " + fooValue);
+
+        String barValue = BarId.K.vl(bar);
+        System.out.println("Bar value Vl ext: " + barValue);
     }
 
     private void useFooBarBazValues(Vl<FooId> foo, Vl<BarId> bar, Vl<BazId> baz) {
@@ -146,16 +172,16 @@ class AliasAndTupleStuffTest {
 
 
     public static class FooId implements AliasWithStructAccessor<HasFooId, Long> {
-        public static AliasKey<FooId> K = FooIdKey.INSTANCE;
-        private enum FooIdKey implements AliasKey<FooId> { INSTANCE }
+        public static FooIdKey K = FooIdKey.INSTANCE;
+        public enum FooIdKey implements AliasKeyWithFactory<FooId, Long> { INSTANCE }
     }
     public interface HasFooId extends NmStructAccessor {
         default long fooId() { return NmStructAccessor.v(FooId.K, this); }
     }
 
     public static class BarId implements AliasWithStructAccessor<HasBarId, String> {
-        public static AliasKey<BarId> K = BarIdKey.INSTANCE;
-        private enum BarIdKey implements AliasKey<BarId> { INSTANCE }
+        public static BarIdKey K = BarIdKey.INSTANCE;
+        public enum BarIdKey implements AliasKeyWithFactory<BarId, String> { INSTANCE }
     }
     public interface HasBarId extends NmStructAccessor {
         default String barId() { return NmStructAccessor.v(BarId.K, this); }

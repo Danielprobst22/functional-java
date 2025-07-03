@@ -1,5 +1,6 @@
-package dapg.data.alias;
+package dapg.data.alias.product.api.addons.alias;
 
+import dapg.data.alias.Alias;
 import dapg.data.alias.product.impl.struct.NmStructAccessor;
 
 //fmt:off

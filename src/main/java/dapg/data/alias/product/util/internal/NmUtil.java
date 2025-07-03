@@ -16,10 +16,10 @@ public final class NmUtil {
 
     //region Keys
     public static AliasKey<?> EMPTY_KEY_SLOT_PLACEHOLDER = EmptyKeySlot.INSTANCE;
-    private enum EmptyKeySlot implements AliasKey<Alias<Object>> {INSTANCE}
+    private enum EmptyKeySlot implements AliasKey<Alias<Object>> { INSTANCE }
 
     public static AliasKey<?> RESERVED_KEY_SLOT_PLACEHOLDER = ReservedKeySlot.INSTANCE;
-    private enum ReservedKeySlot implements AliasKey<Alias<Object>> {INSTANCE}
+    private enum ReservedKeySlot implements AliasKey<Alias<Object>> { INSTANCE }
 
     public static AliasKey<?>[] preallocateKeysArrayAndPut(AliasKey<?>... varargsKeys) {
         if (varargsKeys.length < MAX_ARITY) {
@@ -40,7 +40,7 @@ public final class NmUtil {
 
     //region Values
     public static Object EMPTY_VALUE_SLOT_PLACEHOLDER = EmptyValueSlot.INSTANCE;
-    private enum EmptyValueSlot {INSTANCE}
+    private enum EmptyValueSlot { INSTANCE }
 
     public static Object[] preallocateValuesArrayAndPut(Object... varargsValues) {
         if (varargsValues.length < MAX_ARITY) {
